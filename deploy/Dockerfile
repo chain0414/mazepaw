@@ -1,15 +1,25 @@
+# syntax=docker/dockerfile:1.4
 # -----------------------------------------------------------------------------
 # Stage 1: build console frontend (dist not committed in repo).
 # -----------------------------------------------------------------------------
+# 优化：先复制 package.json/lock，利用 Docker 层缓存；仅改源码时跳过 npm ci
 FROM agentscope-registry.ap-southeast-1.cr.aliyuncs.com/agentscope/node:slim AS console-builder
 WORKDIR /app
+ARG NPM_CONFIG_REGISTRY
+ENV NPM_CONFIG_REGISTRY=${NPM_CONFIG_REGISTRY}
+COPY console/package.json console/package-lock.json /app/console/
+RUN --mount=type=cache,target=/root/.npm \
+    cd /app/console && npm ci --include=dev
 COPY console /app/console
-RUN cd /app/console && npm ci --include=dev && npm run build
+RUN cd /app/console && npm run build
 
 # -----------------------------------------------------------------------------
 # Stage 2: runtime image with Python, Chromium, and app.
 # -----------------------------------------------------------------------------
 FROM agentscope-registry.ap-southeast-1.cr.aliyuncs.com/agentscope/node:slim
+
+# 国内构建：docker build --build-arg APT_USE_ALIYUN_MIRROR=1（广州 up.sh 已默认传）
+ARG APT_USE_ALIYUN_MIRROR=0
 
 # ENV variables
 ENV NODE_ENV=production
@@ -26,7 +36,20 @@ ENV COPAW_ENABLED_CHANNELS=${COPAW_ENABLED_CHANNELS}
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y --fix-missing \
+# 单次 apt-get update，避免双层 RUN 清空 list 缓存导致重复拉索引；BuildKit 缓存加速重复构建
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    set -eux; \
+    if [ "$APT_USE_ALIYUN_MIRROR" = "1" ]; then \
+      for f in /etc/apt/sources.list /etc/apt/sources.list.d/*; do \
+        [ -f "$f" ] || continue; \
+        sed -i \
+          -e 's|deb.debian.org|mirrors.aliyun.com|g' \
+          -e 's|security.debian.org|mirrors.aliyun.com|g' \
+          "$f"; \
+      done; \
+    fi; \
+    apt-get update && apt-get install -y --fix-missing \
     curl  \
     python3  \
     python3-pip  \
@@ -43,11 +66,6 @@ RUN apt-get update && apt-get install -y --fix-missing \
     dbus-x11 \
     fonts-wqy-zenhei \
     fonts-wqy-microhei \
-  && rm -rf /var/lib/apt/lists/* \
-  && apt-get clean
-
-
-RUN apt-get update && apt-get install -y --fix-missing \
     chromium \
     chromium-sandbox \
     libx11-xcb1 \
