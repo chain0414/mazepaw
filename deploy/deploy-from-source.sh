@@ -17,7 +17,7 @@ set -euo pipefail
 #   Docker 构建加速（可选，需 DOCKER_BUILDKIT=1，Docker 23+ 通常已默认）：
 #   MAZEPAW_APT_ALIYUN_MIRROR=1      - apt 使用 mirrors.aliyun.com
 #   MAZEPAW_NPM_REGISTRY=https://... - 覆盖 npm registry（例: npmmirror）
-#   广州脚本可设 MAZEPAW_USE_CN_MIRRORS=1 同时启用上述默认（见 instances/guangzhou/up.sh）
+#   instances/guangzhou/up.sh 默认为国内构建源；MAZEPAW_USE_OFFICIAL_MIRRORS=1 可改走官方
 
 MAZEPAW_PORT="${MAZEPAW_PORT:-8088}"
 MAZE_COMPOSE_FILE="${MAZE_COMPOSE_FILE:-docker-compose.server.yml}"
