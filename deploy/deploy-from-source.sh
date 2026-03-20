@@ -14,9 +14,10 @@ set -euo pipefail
 #                       MAZE_DEPLOY_DIR=.../maze-deploy/instances/guangzhou
 #   MAZEPAW_PORT      - 独立 docker run 模式下的宿主机端口，默认 8088
 #
-#   Docker 构建加速（可选，需 Docker BuildKit，Docker 23+ 默认开启）：
-#   MAZEPAW_APT_ALIYUN_MIRROR=1  - apt 使用 mirrors.aliyun.com（国内 ECS 强烈建议）
-#   MAZEPAW_NPM_REGISTRY=https://... - 覆盖 npm registry（例: https://registry.npmmirror.com）
+#   Docker 构建加速（可选，需 DOCKER_BUILDKIT=1，Docker 23+ 通常已默认）：
+#   MAZEPAW_APT_ALIYUN_MIRROR=1      - apt 使用 mirrors.aliyun.com
+#   MAZEPAW_NPM_REGISTRY=https://... - 覆盖 npm registry（例: npmmirror）
+#   广州脚本可设 MAZEPAW_USE_CN_MIRRORS=1 同时启用上述默认（见 instances/guangzhou/up.sh）
 
 MAZEPAW_PORT="${MAZEPAW_PORT:-8088}"
 MAZE_COMPOSE_FILE="${MAZE_COMPOSE_FILE:-docker-compose.server.yml}"

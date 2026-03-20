@@ -1,4 +1,5 @@
-# syntax=docker/dockerfile:1.4
+# 不使用 # syntax=docker/dockerfile:1.x：该指令会从 Docker Hub 拉取 frontend 镜像，国内/受限网络易超时。
+# BuildKit 内置解析器支持下方 RUN --mount=type=cache（Docker 20.10+，需 DOCKER_BUILDKIT=1）。
 # -----------------------------------------------------------------------------
 # Stage 1: build console frontend (dist not committed in repo).
 # -----------------------------------------------------------------------------
@@ -18,7 +19,7 @@ RUN cd /app/console && npm run build
 # -----------------------------------------------------------------------------
 FROM agentscope-registry.ap-southeast-1.cr.aliyuncs.com/agentscope/node:slim
 
-# 国内构建：docker build --build-arg APT_USE_ALIYUN_MIRROR=1（广州 up.sh 已默认传）
+# 国内构建：docker build --build-arg APT_USE_ALIYUN_MIRROR=1（可选，见 deploy-from-source / 广州 README）
 ARG APT_USE_ALIYUN_MIRROR=0
 
 # ENV variables
