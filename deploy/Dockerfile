@@ -3,16 +3,17 @@
 # -----------------------------------------------------------------------------
 # Stage 1: build console frontend (dist not committed in repo).
 # -----------------------------------------------------------------------------
-# 优化：先复制 package.json/lock，利用 Docker 层缓存；仅改源码时跳过 npm ci
+# 优化：先复制 package.json/lock，利用 Docker 层缓存；仅改源码时跳过安装
 FROM agentscope-registry.ap-southeast-1.cr.aliyuncs.com/agentscope/node:slim AS console-builder
 WORKDIR /app
 ARG NPM_CONFIG_REGISTRY
 ENV NPM_CONFIG_REGISTRY=${NPM_CONFIG_REGISTRY}
-COPY console/package.json console/package-lock.json /app/console/
-RUN --mount=type=cache,target=/root/.npm \
-    cd /app/console && npm ci --include=dev
+COPY console/package.json console/pnpm-lock.yaml /app/console/
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    npm install -g pnpm@9.15.3 && \
+    cd /app/console && pnpm install --frozen-lockfile
 COPY console /app/console
-RUN cd /app/console && npm run build
+RUN cd /app/console && pnpm run build
 
 # -----------------------------------------------------------------------------
 # Stage 2: runtime image with Python, Chromium, and app.
