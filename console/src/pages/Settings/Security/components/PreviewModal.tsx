@@ -1,6 +1,7 @@
 import { Modal, Button, Tag } from "@agentscope-ai/design";
 import { useTranslation } from "react-i18next";
 import type { ToolGuardRule } from "../../../../api/modules/security";
+import { useTheme } from "../../../../contexts/ThemeContext";
 
 const SEVERITY_COLORS: Record<string, string> = {
   CRITICAL: "red",
@@ -16,6 +17,7 @@ interface PreviewModalProps {
 }
 
 export function PreviewModal({ rule, onClose }: PreviewModalProps) {
+  const { isDark } = useTheme();
   const { t } = useTranslation();
 
   if (!rule) return null;
@@ -65,7 +67,8 @@ export function PreviewModal({ rule, onClose }: PreviewModalProps) {
         </p>
         <pre
           style={{
-            background: "#f5f5f5",
+            background: isDark ? "#2a2a2a" : "#f5f5f5",
+            color: isDark ? "rgba(255,255,255,0.85)" : undefined,
             padding: 12,
             borderRadius: 6,
             fontSize: 13,
@@ -80,7 +83,8 @@ export function PreviewModal({ rule, onClose }: PreviewModalProps) {
             </p>
             <pre
               style={{
-                background: "#f5f5f5",
+                background: isDark ? "#2a2a2a" : "#f5f5f5",
+                color: isDark ? "rgba(255,255,255,0.85)" : undefined,
                 padding: 12,
                 borderRadius: 6,
                 fontSize: 13,

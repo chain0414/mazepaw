@@ -158,3 +158,65 @@
   padding-top: 12px;
   border-top: 1px solid #f0f0f0;
 }
+
+/* ─── Dark mode ─────────────────────────────────────────────────────────────── */
+:global(.dark-mode) {
+  .actionTabs {
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .actionTab {
+    color: rgba(255, 255, 255, 0.45);
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.65);
+      background: rgba(255, 255, 255, 0.06);
+    }
+  }
+
+  .disabledTab {
+    color: #8b87f0 !important;
+    background: rgba(97, 92, 237, 0.18) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+
+    &:hover {
+      color: #8b87f0 !important;
+      background: rgba(97, 92, 237, 0.18) !important;
+    }
+  }
+
+  .description {
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .toolName {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .toolDescription {
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .cardFooter {
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .statusDot {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .statusText {
+    color: rgba(255, 255, 255, 0.3);
+  }
+
+  .toolCard {
+    &.normalCard {
+      border-color: rgba(255, 255, 255, 0.08) !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    &.hoverCard {
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4) !important;
+    }
+  }
+}

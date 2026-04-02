@@ -379,7 +379,10 @@ async def get_active_models(
             f"get_active_models: agent_config.active_model="
             f"{agent_config.active_model}",
         )
-        if agent_config.active_model:
+        # ModelSlotConfig defaults provider_id/model to ""; treat incomplete slots
+        # as unset so we fall back to global active_model.json (same as model_factory).
+        slot = agent_config.active_model
+        if slot and slot.provider_id and slot.model:
             logger.info(
                 f"Returning agent-specific model for {workspace.agent_id}: "
                 f"{agent_config.active_model}",

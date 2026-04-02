@@ -1,5 +1,5 @@
 import { createGlobalStyle } from "antd-style";
-import { ConfigProvider, bailianTheme } from "@agentscope-ai/design";
+import { ConfigProvider, bailianDarkTheme, bailianTheme } from "@agentscope-ai/design";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -107,6 +107,8 @@ function AppInner() {
   const basename = getRouterBasename(window.location.pathname);
   const { i18n } = useTranslation();
   const { isDark } = useTheme();
+  /** Light seed + darkAlgorithm still emits `.css-var-rN` with `--copaw-button-default-bg: #fff`; use dark seed in dark mode. */
+  const designTheme = isDark ? bailianDarkTheme : bailianTheme;
   const lang = i18n.resolvedLanguage || i18n.language || "en";
   const [antdLocale, setAntdLocale] = useState<Locale>(
     antdLocaleMap[lang] ?? enUS,
@@ -128,19 +130,45 @@ function AppInner() {
     };
   }, [i18n]);
 
+  const baseTheme = (designTheme as any)?.theme;
+  const seedToken = baseTheme?.token;
+
   return (
     <BrowserRouter basename={basename}>
       <GlobalStyle />
       <ConfigProvider
-        {...bailianTheme}
+        key={isDark ? "mazepaw-theme-dark" : "mazepaw-theme-light"}
+        {...designTheme}
         prefix="copaw"
         prefixCls="copaw"
         locale={antdLocale}
         theme={{
-          ...(bailianTheme as any)?.theme,
+          ...baseTheme,
+          /**
+           * 关闭 Ant Design CSS 变量模式（design 默认 `cssVar: true`）。
+           * 否则会持续注入 `.css-var-rN { --copaw-* }`，与全局深色补丁/顺序强耦合，易出现白底白字。
+           * 关闭后走常规 token + 算法样式，深色由 `bailianDarkTheme` + `darkAlgorithm` 驱动。
+           */
+          cssVar: false,
+          darkMode: isDark,
           algorithm: isDark
             ? antdTheme.darkAlgorithm
             : antdTheme.defaultAlgorithm,
+          components: {
+            ...baseTheme?.components,
+            ...(isDark
+              ? {
+                  Switch: {
+                    ...baseTheme?.components?.Switch,
+                    /** 与 bailian 全局 tertiary 一致（#E7E7ED @ 0.45），避免轨道用纯白显得发飘 */
+                    colorTextQuaternary:
+                      seedToken?.colorTextTertiary ??
+                      "rgba(231, 231, 237, 0.45)",
+                    colorTextTertiary: "rgba(231, 231, 237, 0.55)",
+                  },
+                }
+              : {}),
+          },
         }}
       >
         <Routes>

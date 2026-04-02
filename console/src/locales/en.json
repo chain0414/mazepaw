@@ -33,6 +33,8 @@
     "sessions": "Sessions",
     "cronJobs": "Cron Jobs",
     "heartbeat": "Heartbeat",
+    "dailyDigest": "Daily Digest",
+    "reviewQueue": "Review Queue",
     "agent": "Agent",
     "workspace": "Workspace",
     "skills": "Skills",
@@ -45,7 +47,8 @@
     "environments": "Environments",
     "security": "Security",
     "tokenUsage": "Token Usage",
-    "voiceTranscription": "Voice Transcription"
+    "voiceTranscription": "Voice Transcription",
+    "credentials": "Credentials"
   },
   "voiceTranscription": {
     "title": "Voice Transcription",
@@ -111,6 +114,14 @@
     "id": "ID",
     "description": "Description",
     "workspace": "Workspace Path",
+    "template": "Template",
+    "repoCount": "Repos",
+    "boundRepos": "Bound Repositories",
+    "repoId": "Repo ID",
+    "repoName": "Repo Name",
+    "repoLocalPath": "Local Path",
+    "repoRemoteUrl": "Remote URL",
+    "addRepo": "Add Repository",
     "create": "Create Agent",
     "createTitle": "Create New Agent",
     "createSuccess": "Agent created successfully",
@@ -139,7 +150,155 @@
     "descriptionPlaceholder": "Briefly describe this agent's purpose...",
     "workspaceHelp": "Leave empty to auto-generate in ~/.copaw/workspaces/<id>",
     "defaultNotEditable": "Default agent cannot be edited",
-    "defaultNotDeletable": "Default agent cannot be deleted"
+    "defaultNotDeletable": "Default agent cannot be deleted",
+    "gitCredential": "Git identity",
+    "gitCredentialHint": "Create a profile under Credentials, then select it here. Only a reference is stored—never raw secrets.",
+    "gitCredentialPlaceholder": "Optional: select a Git credential profile",
+    "developerRepoHint": "Developer agents work best with a bound repository, but you can create one first and add repos later. Remote URL is metadata only and never creates a repo for you.",
+    "developerNoRepoAlert": "Developer agents should bind at least one repository; most coding and Git workflows will not work without a local checkout.",
+    "gitCredentialPushHint": "Pushing to a remote usually requires a Git credential profile.",
+    "goToCredentials": "Open credentials",
+    "repoIdPlaceholder": "e.g. my-repo",
+    "repoNamePlaceholder": "e.g. My project",
+    "repoLocalPathPlaceholder": "e.g. /path/to/repo",
+    "repoIdRequired": "Please enter a repo ID",
+    "repoNameRequired": "Please enter a repo name",
+    "repoLocalPathRequired": "Please enter a local path",
+    "repoRemoteUrlHelp": "Optional. Pasting a common Git SSH/HTTPS URL can autofill repo ID and name when those fields are empty.",
+    "ossResearchDesc": "For OSS discovery and daily digests. Repository binding is optional; edit RESEARCH.md in the workspace.",
+    "templates": {
+      "general": "General",
+      "developer": "Developer",
+      "oss_researcher": "OSS researcher"
+    }
+  },
+  "credentials": {
+    "title": "Credentials",
+    "pageDescription": "Manage identity references (e.g. Git). Secrets stay in env/secret stores; agents only store references.",
+    "addGit": "Add Git credential",
+    "groups": {
+      "git": "Git",
+      "social": "Social / publishing",
+      "deploy": "Deploy"
+    },
+    "gitHelp": "Use the guided flow to add a GitHub account (SSH key, Git identity, optional ~/.ssh/config), or edit an existing profile. Secrets stay as references—never paste private key material here.",
+    "socialHelp": "Browser-assisted cookie/session capture may arrive in a later release.",
+    "deployHelp": "SSH/registry checks and deploy credentials may arrive in a later release.",
+    "comingSoon": "Coming soon",
+    "loadFailed": "Failed to load credentials",
+    "saveFailed": "Save failed",
+    "createSuccess": "Credential created",
+    "updateSuccess": "Credential updated",
+    "deleteSuccess": "Credential deleted",
+    "deleteFailed": "Delete failed",
+    "deleteConfirm": "Delete this credential profile?",
+    "createTitle": "New Git credential",
+    "editTitle": "Edit Git credential",
+    "columns": {
+      "name": "Name",
+      "gitIdentity": "Commit identity",
+      "provider": "Provider",
+      "authMethod": "Auth",
+      "secretRef": "Secret ref"
+    },
+    "fields": {
+      "name": "Display name",
+      "provider": "Provider",
+      "authMethod": "Auth method",
+      "secretRef": "Secret reference",
+      "acquisitionNotes": "How to obtain",
+      "gitUserName": "Git user name",
+      "gitUserEmail": "Git user email"
+    },
+    "placeholders": {
+      "name": "e.g. Personal GitHub",
+      "notes": "How to create an SSH key or token…",
+      "gitUserName": "Your name for commits",
+      "gitUserEmail": "Email for commits (e.g. GitHub noreply)"
+    },
+    "secretRefHelp": "Env var name or secret-backend key—do not paste private key material.",
+    "wizard": {
+      "title": "Add GitHub account",
+      "stepKeys": "SSH key",
+      "stepGithub": "Add key on GitHub",
+      "stepTest": "Test connection",
+      "stepIdentity": "Commit identity",
+      "stepSshConfig": "SSH config",
+      "stepSave": "Save",
+      "keysIntro": "Choose an existing key pair under ~/.ssh, or generate a new one.",
+      "noKeys": "No SSH key pairs found. Generate one below.",
+      "generateKey": "Generate new key",
+      "generateTitle": "Generate SSH key",
+      "generateConfirm": "Generate",
+      "keyName": "Key file name (under ~/.ssh)",
+      "keyNameAutoHint": "Opens with a random default (id_ed25519_copaw_…). Type an email above first: until you edit this field, the file name follows id_ed25519_<local-part> (sanitized).",
+      "keyComment": "Comment (often your email)",
+      "keyNameRequired": "Enter a key file name",
+      "keyGenerated": "Key generated",
+      "keyGenFailed": "Key generation failed",
+      "githubAddIntro": "Add this public key to your GitHub account, then continue.",
+      "openGithubSsh": "Open GitHub SSH keys",
+      "publicKey": "Public key",
+      "copyPubKey": "Copy",
+      "copied": "Copied",
+      "copyFailed": "Copy failed",
+      "testIntro": "Verify that GitHub accepts this SSH key.",
+      "runTest": "Run SSH test",
+      "testOk": "Success — authenticated as {{user}}",
+      "testFailed": "SSH test failed",
+      "sshConfigIntro": "Optional: append a Host entry to ~/.ssh/config so your normal terminal can use this key with a custom host alias (e.g. git@github.com-work:owner/repo.git). Review the full file after apply.",
+      "hostAlias": "Host alias",
+      "previewConfig": "Preview merged file",
+      "applyConfig": "Write to ~/.ssh/config",
+      "skipSshConfig": "Skip (agent still uses this key via CoPaw)",
+      "previewLabel": "Preview (~/.ssh/config after append)",
+      "fullConfigLabel": "Current ~/.ssh/config (after write)",
+      "sshApplied": "SSH config updated",
+      "sshApplyFailed": "Could not update SSH config",
+      "saveSummary": "Private key path stored as reference: {{key}}",
+      "credNameRequired": "Enter a display name",
+      "identityRequired": "Enter Git user name and email",
+      "pickKey": "Select or generate an SSH key first",
+      "testFirst": "Run a successful SSH test before continuing",
+      "next": "Next",
+      "back": "Back"
+    }
+  },
+  "dailyDigest": {
+    "title": "Daily Digest",
+    "description": "This is the inbox digest view for proactive summaries and discoveries delivered by agents.",
+    "columns": {
+      "title": "Title",
+      "summary": "Summary",
+      "sources": "Sources",
+      "repoScope": "Related Objects",
+      "agent": "Source Agent",
+      "createdAt": "Created At"
+    }
+  },
+  "reviewQueue": {
+    "title": "Review Queue",
+    "description": "This is the inbox action view for approvals and other decisions that require your confirmation.",
+    "approve": "Approve",
+    "deny": "Deny",
+    "resolveSuccess": "Resolved successfully",
+    "resolveFailed": "Failed to resolve item",
+    "submitMrReview": "Request MR review",
+    "submitMrReviewTitle": "Submit merge request for review",
+    "mrTitle": "Title",
+    "mrSummary": "Summary and change notes",
+    "mrUrl": "MR URL (optional)",
+    "mrTitleRequired": "Title is required",
+    "mrSummaryRequired": "Summary is required",
+    "submitMrSuccess": "Added to review queue",
+    "submitMrFailed": "Failed to submit",
+    "columns": {
+      "title": "Title",
+      "type": "Type",
+      "status": "Status",
+      "summary": "Summary",
+      "agent": "Source Agent"
+    }
   },
   "skills": {
     "title": "Skills",
@@ -654,6 +813,7 @@
   "modelConfig": {
     "promptTitle": "LLM Model Required",
     "promptMessage": "Chat requires an LLM model to function. Without a configured model, conversations and messages cannot be sent to the backend for processing and storage, and will be lost after a page refresh. Would you like to configure a model now?",
+    "promptHintInChat": "If you already configured a provider under Models, tap Skip, then choose the active model from the dropdown at the top-right of the chat. Or pick provider + model under LLM configuration on the Models page and save.",
     "configureButton": "Configure Model",
     "skipButton": "Skip",
     "chatDisabledTitle": "Chat Disabled",
@@ -685,11 +845,19 @@
     }
   },
   "chat": {
+    "modelSelector": {
+      "selectPlaceholder": "Select model",
+      "noModels": "No configured models",
+      "switchFailed": "Failed to switch model"
+    },
     "disclaimer": "Works for you, grows with you",
     "greeting": "Hello, how can I help you today?",
     "description": "I am a helpful assistant that can help you with your questions.",
     "prompt1": "Let's start a new journey!",
-    "prompt2": "Can you tell me what skills you have?"
+    "prompt2": "Can you tell me what skills you have?",
+    "compressedSummary": {
+      "title": "Context summary"
+    }
   },
   "security": {
     "title": "Security",
@@ -815,6 +983,17 @@
     "title": "Login to CoPaw",
     "registerTitle": "Create Account",
     "firstUserHint": "Create your admin account to get started",
+    "feishuFirstUserHint": "Sign in with your company Feishu account",
+    "feishuLogin": "Sign in with Feishu",
+    "feishuErrors": {
+      "access_denied": "Feishu authorization was cancelled",
+      "no_code": "Invalid OAuth response, please try again",
+      "auth_failed": "Feishu sign-in failed, please try again",
+      "forbidden_tenant": "Only accounts from your company Feishu tenant are allowed",
+      "feishu_not_configured": "Feishu sign-in is not configured",
+      "password_login_local_only": "Use Feishu to sign in; password login is only available from the server localhost",
+      "registration_disabled_use_feishu": "Feishu is enabled; password registration is disabled"
+    },
     "usernamePlaceholder": "Username",
     "passwordPlaceholder": "Password",
     "usernameRequired": "Please enter your username",

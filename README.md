@@ -16,7 +16,7 @@
 [![X](https://img.shields.io/badge/X-Follow_Us-black.svg?logo=x)](https://x.com/agentscope_ai)
 [![DingTalk](https://img.shields.io/badge/DingTalk-Join_Us-orange.svg)](https://qr.dingtalk.com/action/joingroup?code=v1,k1,OmDlBXpjW+I2vWjKDsjvI9dhcXjGZi3bQiojOq3dlDw=&_dt_no_comment=1&origin=11)
 
-[[Documentation](https://copaw.agentscope.io/)] [[中文 README](README_zh.md)] [[日本語](README_ja.md)]
+[[Documentation](https://copaw.agentscope.io/)] [[中文 README](README_zh.md)]
 
 <p align="center">
   <img src="https://img.alicdn.com/imgextra/i2/O1CN014TIqyO1U5wDiSbFfA_!!6000000002467-2-tps-816-192.png" alt="CoPaw Logo" width="120">
@@ -73,7 +73,7 @@ Your Personal AI Assistant; easy to install, deploy on your own machine or on th
 
 > **Recommended reading:**
 >
-> - **I want to run CoPaw in 3 commands**: [Quick Start](#quick-start) → open Console in browser.
+> - **I want to run CoPaw in a few commands**: [Quick Start](#quick-start) with **uv** (recommended) → open Console in browser.
 > - **I want to chat in DingTalk / Feishu / QQ**: Configure [channels](https://copaw.agentscope.io/docs/channels) in the Console.
 > - **I don’t want to install Python**: [Script install](#script-install) handles Python automatically, or use [ModelScope one-click](https://modelscope.cn/studios/fork?target=AgentScope/CoPaw) for cloud deployment.
 
@@ -86,6 +86,7 @@ Your Personal AI Assistant; easy to install, deploy on your own machine or on th
 - [Roadmap](#roadmap)
 - [Contributing](#get-involved)
 - [Install from source](#install-from-source)
+- [Local development (hot reload)](#local-development-hot-reload)
 - [Why CoPaw?](#why-copaw)
 - [Built by](#built-by)
 - [License](#license)
@@ -94,9 +95,34 @@ Your Personal AI Assistant; easy to install, deploy on your own machine or on th
 
 ## Quick Start
 
-### pip install
+### uv (recommended)
 
-If you prefer managing Python yourself:
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) (standalone curl installer, Homebrew, pip, etc.).
+
+**Option A — virtual environment in the current directory** (good for isolating dependencies per machine):
+
+```bash
+uv venv
+uv pip install copaw
+uv run copaw init --defaults
+uv run copaw app
+```
+
+(`uv run` uses `.venv` automatically; you can `source .venv/bin/activate` if you prefer calling `copaw` directly.)
+
+**Option B — CLI installed as a uv [tool](https://docs.astral.sh/uv/concepts/tools/)** (no `activate`; uv manages the tool environment):
+
+```bash
+uv tool install copaw
+copaw init --defaults
+copaw app
+```
+
+Then open **http://127.0.0.1:8088/** in your browser for the Console (chat with CoPaw, configure the agent). To talk in DingTalk, Feishu, QQ, etc., add a channel in the [docs](https://copaw.agentscope.io/docs/channels).
+
+### pip (alternative)
+
+If you do not use uv:
 
 ```bash
 pip install copaw
@@ -104,7 +130,7 @@ copaw init --defaults
 copaw app
 ```
 
-Then open **http://127.0.0.1:8088/** in your browser for the Console (chat with CoPaw, configure the agent). To talk in DingTalk, Feishu, QQ, etc., add a channel in the [docs](https://copaw.agentscope.io/docs/channels).
+Use the same Console URL as in the **uv** section above.
 
 ![Console](https://img.alicdn.com/imgextra/i4/O1CN01z9VY6z1uMad7pgrCj_!!6000000006023-2-tps-3822-2064.png)
 
@@ -339,9 +365,9 @@ CoPaw can run LLMs entirely on your machine — no API keys or cloud services re
 
 | Backend       | Best for                                 | Install                                                              |
 | ------------- | ---------------------------------------- | -------------------------------------------------------------------- |
-| **llama.cpp** | Cross-platform (macOS / Linux / Windows) | `pip install 'copaw[llamacpp]'` or `bash install.sh --extras llamacpp` |
-| **MLX**       | Apple Silicon Macs (M1/M2/M3/M4)         | `pip install 'copaw[mlx]'` or `bash install.sh --extras mlx`         |
-| **Ollama**    | Cross-platform (requires Ollama service) | `pip install 'copaw[ollama]'` or `bash install.sh --extras ollama`   |
+| **llama.cpp** | Cross-platform (macOS / Linux / Windows) | `uv pip install 'copaw[llamacpp]'` / `pip install 'copaw[llamacpp]'` or `bash install.sh --extras llamacpp` |
+| **MLX**       | Apple Silicon Macs (M1/M2/M3/M4)         | `uv pip install 'copaw[mlx]'` / `pip install 'copaw[mlx]'` or `bash install.sh --extras mlx`         |
+| **Ollama**    | Cross-platform (requires Ollama service) | `uv pip install 'copaw[ollama]'` / `pip install 'copaw[ollama]'` or `bash install.sh --extras ollama`   |
 
 After installing, you can download and manage local models in the **Console** UI. You can also use the command line:
 
@@ -430,19 +456,38 @@ git clone https://github.com/agentscope-ai/CoPaw.git
 cd CoPaw
 
 # Build console frontend first (required for web UI)
-cd console && npm ci && npm run build
+cd console && pnpm install --frozen-lockfile && pnpm run build
 cd ..
 
 # Copy console build output to package directory
 mkdir -p src/copaw/console
 cp -R console/dist/. src/copaw/console/
 
-# Install Python package
-pip install -e .
+# Python env with uv (recommended): sync locked deps + editable install
+uv sync
 ```
 
-- **Dev** (tests, formatting): `pip install -e ".[dev,full]"`
-- **Then**: Run `copaw init --defaults`, then `copaw app`.
+- **Run** (from the repo root, uses `.venv`): `uv run copaw init --defaults`, then `uv run copaw app`.
+- **Dev** (tests, formatting, optional extras): `uv sync --extra dev --extra full` (or `uv pip install -e ".[dev,full]"` inside an existing venv).
+- **Without uv**: `pip install -e .` then `copaw init --defaults` and `copaw app`.
+
+The repo includes `uv.lock`; use `uv lock` after dependency changes, then commit the lockfile.
+
+### Local development (hot reload)
+
+From the repo root (requires [Node.js](https://nodejs.org/), [pnpm](https://pnpm.io/installation), and [uv](https://docs.astral.sh/uv/getting-started/installation/)):
+
+```bash
+pnpm run setup                 # root + console deps + uv sync --extra dev (parallel)
+uv run copaw init --defaults   # once per clone / machine
+pnpm run dev
+```
+
+- **`pnpm run dev`** starts the backend and `vite build --mode embed --watch` only (no redundant full `build:embed` first; the watch run emits the initial bundle into `src/copaw/console/`). Use **`pnpm run dev:full`** when you want `tsc -b` + one full embed build before watch (e.g. after large front-end pulls or to fail fast on type errors).
+- **agent** — `copaw app` on **http://127.0.0.1:8088** with `--reload`.
+- **console** — runs `vite build --mode embed --watch`, writing to **`src/copaw/console/`** (same as a manual build-and-copy). Open **http://127.0.0.1:8088/** in the browser; after each save, wait for the watch build to finish, then refresh. For Vite dev server + HMR on port 5173 instead, run `pnpm -C console dev` in another terminal (see `console/vite.config.ts` proxy).
+
+For a **single-process** run like production without watch, follow the build-and-copy steps in [Install from source](#install-from-source), then `uv run copaw app` and open **http://127.0.0.1:8088/**.
 
 ---
 

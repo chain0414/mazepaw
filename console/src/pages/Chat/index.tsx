@@ -12,6 +12,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import sessionApi from "./sessionApi";
 import defaultConfig, { getDefaultConfig } from "./OptionsPanel/defaultConfig";
 import Weather from "./Weather";
+import BrowserUseToolRender from "./components/BrowserUseToolRender";
+import GitCommitCard from "./components/GitCommitCard";
+import CompressedSummaryCard from "./components/CompressedSummaryCard";
+import CustomRequestCard from "./components/CustomRequestCard";
 import { getApiToken, getApiUrl } from "../../api/config";
 import { providerApi } from "../../api/modules/provider";
 import { chatApi } from "../../api/modules/chat";
@@ -19,7 +23,7 @@ import api from "../../api";
 import ModelSelector from "./ModelSelector";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useAgentStore } from "../../stores/agentStore";
-import "./index.module.less";
+import styles from "./index.module.less";
 
 type CopyableContent = {
   type?: string;
@@ -441,11 +445,22 @@ export default function ChatPage() {
       return true;
     };
 
+    /**
+     * Chat 内层 `ChatAnywhereOptionsContext`：若 `theme.colorPrimary || theme.darkMode` 为真，
+     * 会再包一层 `@agentscope-ai/design` ConfigProvider + `generateTheme`，与根 `App` 的
+     * bailian/bailianDark 主题双轨注入，易产生 `.css-var-rN` 与浅色 token 错乱。
+     * 主色与深色由根 ConfigProvider 统一提供，此处只保留 layout 相关字段（prefix / header）。
+     */
+    const {
+      colorPrimary: _omitColorPrimary,
+      darkMode: _omitDarkMode,
+      ...chatThemeRest
+    } = defaultConfig.theme;
+
     return {
       ...i18nConfig,
       theme: {
-        ...defaultConfig.theme,
-        darkMode: isDark,
+        ...chatThemeRest,
         leftHeader: {
           ...defaultConfig.theme.leftHeader,
         },
@@ -496,6 +511,12 @@ export default function ChatPage() {
       },
       customToolRenderConfig: {
         "weather search mock": Weather,
+        browser_use: BrowserUseToolRender,
+        propose_git_commit: GitCommitCard,
+      },
+      cards: {
+        AgentScopeRuntimeRequestCard: CustomRequestCard,
+        CompressedSummaryCard,
       },
     } as unknown as IAgentScopeRuntimeWebUIOptions;
   }, [wrappedSessionApi, customFetch, copyResponse, t, isDark]);
@@ -521,9 +542,21 @@ export default function ChatPage() {
         <Result
           icon={<ExclamationCircleOutlined style={{ color: "#faad14" }} />}
           title={t("modelConfig.promptTitle")}
-          subTitle={t("modelConfig.promptMessage")}
+          subTitle={
+            <>
+              <div>{t("modelConfig.promptMessage")}</div>
+              <div style={{ marginTop: 10 }}>
+                {t("modelConfig.promptHintInChat")}
+              </div>
+            </>
+          }
           extra={[
-            <Button key="skip" onClick={() => setShowModelPrompt(false)}>
+            <Button
+              key="skip"
+              type="default"
+              className={isDark ? styles.modelPromptSkipBtn : undefined}
+              onClick={() => setShowModelPrompt(false)}
+            >
               {t("modelConfig.skipButton")}
             </Button>,
             <Button

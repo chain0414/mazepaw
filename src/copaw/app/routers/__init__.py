@@ -9,6 +9,7 @@ from .local_models import router as local_models_router
 from .providers import router as providers_router
 from .skills import router as skills_router
 from .skills_stream import router as skills_stream_router
+from .insights import router as insights_router
 from .workspace import router as workspace_router
 from .envs import router as envs_router
 from .ollama_models import router as ollama_models_router
@@ -19,6 +20,7 @@ from ..runner.api import router as runner_router
 from .console import router as console_router
 from .token_usage import router as token_usage_router
 from .auth import router as auth_router
+from .credentials import router as credentials_router
 
 router = APIRouter()
 
@@ -34,11 +36,13 @@ router.include_router(providers_router)
 router.include_router(runner_router)
 router.include_router(skills_router)
 router.include_router(skills_stream_router)
+router.include_router(insights_router)
 router.include_router(tools_router)
 router.include_router(workspace_router)
 router.include_router(envs_router)
 router.include_router(token_usage_router)
 router.include_router(auth_router)
+router.include_router(credentials_router)
 
 
 def create_agent_scoped_router() -> APIRouter:

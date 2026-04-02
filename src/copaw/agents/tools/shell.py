@@ -4,19 +4,57 @@
 """The shell command tool."""
 
 import asyncio
+import json
 import locale
 import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from agentscope.message import TextBlock
 from agentscope.tool import ToolResponse
 
 from ...constant import WORKING_DIR
 from ...config.context import get_current_workspace_dir
+from ...config.git_credential_env import merge_git_credential_env_for_agent
 from .utils import truncate_shell_output
+
+if TYPE_CHECKING:
+    from ...config.config import AgentProfileConfig
+
+
+def _try_load_agent_profile_from_workspace(
+    workspace: Path,
+) -> "AgentProfileConfig | None":
+    """Load ``agent.json`` next to the workspace when present."""
+    path = workspace / "agent.json"
+    if not path.is_file():
+        return None
+    try:
+        from ...config.config import AgentProfileConfig
+
+        with open(path, encoding="utf-8") as handle:
+            data = json.load(handle)
+        return AgentProfileConfig(**data)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _resolve_default_cwd_for_shell(workspace: Path | None) -> Path:
+    """Use single bound repo path for developer agents when ``cwd`` is omitted."""
+    if workspace is None:
+        return Path(WORKING_DIR)
+    cfg = _try_load_agent_profile_from_workspace(workspace)
+    if (
+        cfg
+        and cfg.template_id == "developer"
+        and len(cfg.repo_assets or []) == 1
+    ):
+        lp = Path(cfg.repo_assets[0].local_path).expanduser()
+        if lp.is_dir():
+            return lp
+    return workspace
 
 
 def _kill_process_tree_win32(pid: int) -> None:
@@ -158,12 +196,12 @@ async def execute_shell_command(
 
     cmd = (command or "").strip()
 
-    # Set working directory
-    # Use current workspace_dir from context, fallback to WORKING_DIR
+    # Set working directory: optional cwd, else developer single-repo default, else workspace
+    workspace_ctx = get_current_workspace_dir()
     if cwd is not None:
-        working_dir = cwd
+        working_dir = Path(cwd).expanduser()
     else:
-        working_dir = get_current_workspace_dir() or WORKING_DIR
+        working_dir = _resolve_default_cwd_for_shell(workspace_ctx)
 
     # Ensure the venv Python is on PATH for subprocesses
     env = os.environ.copy()
@@ -173,6 +211,13 @@ async def execute_shell_command(
         env["PATH"] = python_bin_dir + os.pathsep + existing_path
     else:
         env["PATH"] = python_bin_dir
+
+    agent_cfg = (
+        _try_load_agent_profile_from_workspace(workspace_ctx)
+        if workspace_ctx
+        else None
+    )
+    merge_git_credential_env_for_agent(env, agent_cfg)
 
     try:
         if sys.platform == "win32":

@@ -8,8 +8,8 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from agentscope_runtime.engine.app import AgentApp
 
 from ..config import load_config  # pylint: disable=no-name-in-module
@@ -243,36 +243,53 @@ if CORS_ORIGINS:
 _CONSOLE_STATIC_ENV = "COPAW_CONSOLE_STATIC_DIR"
 
 
-def _resolve_console_static_dir() -> str:
-    if os.environ.get(_CONSOLE_STATIC_ENV):
-        return os.environ[_CONSOLE_STATIC_ENV]
-    # Shipped dist lives in copaw package as static data (not a Python pkg).
+def _pick_console_static_dir() -> Path | None:
+    """
+    Resolve which built console tree to serve.
+
+    Embed can write `src/copaw/console`, while older workflows use `console/dist`.
+    Import-time resolution used to pick one directory and never update: if the
+    process started before the first embed finished, StaticFiles could pin stale
+    `console/dist`. We pick the candidate whose `index.html` is newest by mtime.
+    """
+    env = os.environ.get(_CONSOLE_STATIC_ENV)
+    if env:
+        p = Path(env)
+        if p.is_dir() and (p / "index.html").is_file():
+            return p.resolve()
+        return None
     pkg_dir = Path(__file__).resolve().parent.parent
-    candidate = pkg_dir / "console"
-    if candidate.is_dir() and (candidate / "index.html").exists():
-        return str(candidate)
-    # the following code can be removed after next release,
-    # because the console will be output to copaw's
-    # `src/copaw/console/` directory directly by vite.
     cwd = Path(os.getcwd())
-    for subdir in ("console/dist", "console_dist"):
-        candidate = cwd / subdir
-        if candidate.is_dir() and (candidate / "index.html").exists():
-            return str(candidate)
-    return str(cwd / "console" / "dist")
+    candidates: list[Path] = []
+    seen: set[Path] = set()
+    for raw in (
+        pkg_dir / "console",
+        cwd / "console" / "dist",
+        cwd / "console_dist",
+    ):
+        try:
+            c = raw.resolve()
+        except OSError:
+            continue
+        if c in seen:
+            continue
+        seen.add(c)
+        if c.is_dir() and (c / "index.html").is_file():
+            candidates.append(c)
+    if not candidates:
+        return None
+    return max(candidates, key=lambda p: (p / "index.html").stat().st_mtime)
 
 
-_CONSOLE_STATIC_DIR = _resolve_console_static_dir()
-_CONSOLE_INDEX = (
-    Path(_CONSOLE_STATIC_DIR) / "index.html" if _CONSOLE_STATIC_DIR else None
-)
-logger.info(f"STATIC_DIR: {_CONSOLE_STATIC_DIR}")
+_initial_console = _pick_console_static_dir()
+logger.info("STATIC_DIR: %s", _initial_console or "(none; resolved per request)")
 
 
 @app.get("/")
 def read_root():
-    if _CONSOLE_INDEX and _CONSOLE_INDEX.exists():
-        return FileResponse(_CONSOLE_INDEX)
+    base = _pick_console_static_dir()
+    if base and (base / "index.html").is_file():
+        return FileResponse(base / "index.html")
     return {
         "message": (
             "CoPaw Web Console is not available. "
@@ -307,61 +324,76 @@ app.include_router(
 # POST /voice/incoming, WS /voice/ws, POST /voice/status-callback
 app.include_router(voice_router, tags=["voice"])
 
-# Mount console: root static files (logo.png etc.) then assets, then SPA
-# fallback.
-if os.path.isdir(_CONSOLE_STATIC_DIR):
-    _console_path = Path(_CONSOLE_STATIC_DIR)
+# Console: root static files (logo.png etc.), then /assets (StaticFiles for
+# ETag/304), then SPA fallback.
+# index.html / logo / SPA use per-request _pick_console_static_dir() so a
+# dev-time embed rebuild is picked up without restarting uvicorn.
+# /assets uses StaticFiles (Starlette handles caching headers); the hashed
+# filenames change on every build so stale-cache is not a concern.
 
-    def _serve_console_index():
-        if _CONSOLE_INDEX and _CONSOLE_INDEX.exists():
-            return FileResponse(_CONSOLE_INDEX)
 
+def _serve_console_index():
+    base = _pick_console_static_dir()
+    if not base:
         raise HTTPException(status_code=404, detail="Not Found")
+    idx = base / "index.html"
+    if idx.is_file():
+        return FileResponse(idx)
+    raise HTTPException(status_code=404, detail="Not Found")
 
-    @app.get("/logo.png")
-    def _console_logo():
-        f = _console_path / "logo.png"
-        if f.is_file():
-            return FileResponse(f, media_type="image/png")
+
+def _serve_console_static(name: str, media_type: str | None = None):
+    base = _pick_console_static_dir()
+    if not base:
         raise HTTPException(status_code=404, detail="Not Found")
+    f = base / name
+    if f.is_file():
+        kw = {"media_type": media_type} if media_type else {}
+        return FileResponse(f, **kw)
+    raise HTTPException(status_code=404, detail="Not Found")
 
-    @app.get("/dark-logo.png")
-    def _console_dark_logo():
-        f = _console_path / "dark-logo.png"
-        if f.is_file():
-            return FileResponse(f, media_type="image/png")
-        raise HTTPException(status_code=404, detail="Not Found")
 
-    @app.get("/copaw-symbol.svg")
-    def _console_icon():
-        f = _console_path / "copaw-symbol.svg"
-        if f.is_file():
-            return FileResponse(f, media_type="image/svg+xml")
-        raise HTTPException(status_code=404, detail="Not Found")
+@app.get("/logo.png")
+def _console_logo():
+    return _serve_console_static("logo.png", "image/png")
 
-    @app.get("/copaw-dark.png")
-    def _console_dark_icon():
-        f = _console_path / "copaw-dark.png"
-        if f.is_file():
-            return FileResponse(f, media_type="image/png")
-        raise HTTPException(status_code=404, detail="Not Found")
 
-    _assets_dir = _console_path / "assets"
-    if _assets_dir.is_dir():
-        app.mount(
-            "/assets",
-            StaticFiles(directory=str(_assets_dir)),
-            name="assets",
-        )
+@app.get("/dark-logo.png")
+def _console_dark_logo():
+    return _serve_console_static("dark-logo.png", "image/png")
 
-    @app.get("/console")
-    @app.get("/console/")
-    @app.get("/console/{full_path:path}")
-    def _console_spa_alias(full_path: str = ""):
-        _ = full_path
-        return _serve_console_index()
 
-    @app.get("/{full_path:path}")
-    def _console_spa(full_path: str):
-        _ = full_path
-        return _serve_console_index()
+@app.get("/copaw-symbol.svg")
+def _console_icon():
+    return _serve_console_static("copaw-symbol.svg", "image/svg+xml")
+
+
+@app.get("/copaw-dark.png")
+def _console_dark_icon():
+    return _serve_console_static("copaw-dark.png", "image/png")
+
+
+# /assets — use StaticFiles so Starlette handles ETag / 304 / Cache-Control.
+# Mount against initial dir; in Docker there is exactly one copy. In dev the
+# Vite sync plugin keeps console/dist in sync with src/copaw/console so the
+# assets dir content is identical regardless of which candidate is resolved.
+if _initial_console and (_initial_console / "assets").is_dir():
+    app.mount(
+        "/assets",
+        StaticFiles(directory=str(_initial_console / "assets")),
+        name="assets",
+    )
+
+
+@app.get("/console")
+@app.get("/console/")
+@app.get("/console/{full_path:path}")
+def _console_spa_alias(full_path: str = ""):
+    _ = full_path
+    return _serve_console_index()
+
+
+@app.get("/{full_path:path}")
+def _console_spa(full_path: str):
+    _ = full_path
+    return _serve_console_index()

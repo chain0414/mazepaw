@@ -1,0 +1,79 @@
+.agentModalRoot {
+  :global(.copaw-modal-body) {
+    padding-top: 12px;
+  }
+}
+
+.secondaryText {
+  display: block;
+  margin-bottom: 12px !important;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.repoCard {
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid rgba(5, 5, 5, 0.08);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.015);
+}
+
+.rowAction {
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: 24px;
+}
+
+.addRepoButton {
+  margin-top: 8px;
+}
+
+:global(.dark-mode) {
+  .agentModalRoot {
+    :global(.copaw-divider-inner-text),
+    :global(.copaw-form-item-label > label) {
+      color: rgba(255, 255, 255, 0.88);
+    }
+
+    :global(.copaw-form-item-extra) {
+      color: rgba(255, 255, 255, 0.68);
+    }
+
+    :global(.copaw-btn-link) {
+      color: #8b87f0;
+    }
+
+    :global(.copaw-btn-link:hover) {
+      color: #a5a2f5;
+    }
+
+    :global(.copaw-btn-link.copaw-btn-dangerous) {
+      color: #ff7875;
+    }
+
+    :global(.copaw-btn-link.copaw-btn-dangerous:hover) {
+      color: #ff9c9a;
+    }
+
+    :global(.copaw-btn-dashed) {
+      color: rgba(255, 255, 255, 0.82);
+      border-color: rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    :global(.copaw-btn-dashed:hover) {
+      color: rgba(255, 255, 255, 0.92);
+      border-color: rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.06);
+    }
+  }
+
+  .secondaryText {
+    color: rgba(255, 255, 255, 0.68);
+  }
+
+  .repoCard {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.03);
+  }
+}

@@ -241,6 +241,7 @@ async def put_agent_language(
             copy_md_files(
                 language,
                 workspace_dir=workspace.workspace_dir,
+                template_id=agent_config.template_id,
             )
             or []
         )

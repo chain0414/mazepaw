@@ -42,7 +42,8 @@
     "security": "Безопасность",
     "tokenUsage": "Использование токенов",
     "voiceTranscription": "Транскрипция голоса",
-    "agents": "Управление агентами"
+    "agents": "Управление агентами",
+    "credentials": "Учётные данные"
   },
   "agent": {
     "management": "Управление агентами",
@@ -79,7 +80,71 @@
     "descriptionPlaceholder": "Кратко опишите назначение этого агента...",
     "workspaceHelp": "Оставьте пустым для автоматического создания в ~/.copaw/workspaces/<id>",
     "defaultNotEditable": "Агент по умолчанию не может быть отредактирован",
-    "defaultNotDeletable": "Агент по умолчанию не может быть удалён"
+    "defaultNotDeletable": "Агент по умолчанию не может быть удалён",
+    "template": "Шаблон",
+    "repoCount": "Репозитории",
+    "boundRepos": "Привязанные репозитории",
+    "repoId": "ID репозитория",
+    "repoName": "Имя репозитория",
+    "repoLocalPath": "Локальный путь",
+    "repoRemoteUrl": "Удалённый URL",
+    "addRepo": "Добавить репозиторий",
+    "gitCredential": "Git-учётные данные",
+    "gitCredentialHint": "Создайте профиль в разделе «Учётные данные» и выберите его здесь. Сохраняется только ссылка.",
+    "gitCredentialPlaceholder": "Необязательно: профиль Git",
+    "developerNoRepoAlert": "Для агента-разработчика нужен хотя бы один привязанный репозиторий; без локального checkout большинство сценариев кода и Git недоступны.",
+    "gitCredentialPushHint": "Для push в удалённый репозиторий обычно нужен профиль Git-учётных данных.",
+    "goToCredentials": "Открыть учётные данные",
+    "repoIdPlaceholder": "например: my-repo",
+    "repoNamePlaceholder": "например: My project",
+    "repoLocalPathPlaceholder": "например: /path/to/repo",
+    "ossResearchDesc": "Для поиска по OSS и дайджестов. Репозиторий необязателен.",
+    "templates": {
+      "general": "Общий",
+      "developer": "Разработчик",
+      "oss_researcher": "Исследователь OSS"
+    }
+  },
+  "credentials": {
+    "title": "Учётные данные",
+    "pageDescription": "Ссылки на Git и другие идентичности. Секреты хранятся вне интерфейса.",
+    "addGit": "Добавить Git-профиль",
+    "groups": {
+      "git": "Git",
+      "social": "Соцсети / публикации",
+      "deploy": "Деплой"
+    },
+    "gitHelp": "Укажите имя, способ аутентификации и ссылку на секрет (переменная окружения и т.д.).",
+    "socialHelp": "В будущем: cookie/session через браузер.",
+    "deployHelp": "В будущем: SSH и реестры.",
+    "comingSoon": "Скоро",
+    "loadFailed": "Не удалось загрузить",
+    "saveFailed": "Не удалось сохранить",
+    "createSuccess": "Создано",
+    "updateSuccess": "Обновлено",
+    "deleteSuccess": "Удалено",
+    "deleteFailed": "Не удалось удалить",
+    "deleteConfirm": "Удалить этот профиль?",
+    "createTitle": "Новый Git-профиль",
+    "editTitle": "Редактировать Git-профиль",
+    "columns": {
+      "name": "Имя",
+      "provider": "Провайдер",
+      "authMethod": "Аутентификация",
+      "secretRef": "Ссылка на секрет"
+    },
+    "fields": {
+      "name": "Отображаемое имя",
+      "provider": "Провайдер",
+      "authMethod": "Способ аутентификации",
+      "secretRef": "Ссылка на секрет",
+      "acquisitionNotes": "Как получить"
+    },
+    "placeholders": {
+      "name": "например: личный GitHub",
+      "notes": "Как создать SSH-ключ или токен…"
+    },
+    "secretRefHelp": "Имя переменной окружения или ключ — не вставляйте приватный ключ."
   },
   "workspace": {
     "title": "Рабочее пространство",
@@ -611,6 +676,7 @@
   "modelConfig": {
     "promptTitle": "Требуется LLM-модель",
     "promptMessage": "Для работы чата нужна LLM-модель. Без настроенной модели диалоги и сообщения не могут быть отправлены в бэкенд для обработки и хранения, и будут потеряны после обновления страницы. Хотите настроить модель сейчас?",
+    "promptHintInChat": "Если провайдер уже настроен в разделе «Модели», нажмите «Пропустить» и выберите активную модель в выпадающем списке справа вверху чата. Или укажите провайдера и модель в блоке конфигурации LLM на странице «Модели» и сохраните.",
     "configureButton": "Настроить модель",
     "skipButton": "Пропустить",
     "chatDisabledTitle": "Чат отключён",
@@ -642,11 +708,19 @@
     }
   },
   "chat": {
+    "modelSelector": {
+      "selectPlaceholder": "Выбрать модель",
+      "noModels": "Нет настроенных моделей",
+      "switchFailed": "Не удалось переключить модель"
+    },
     "disclaimer": "Работает для вас, растёт вместе с вами",
     "greeting": "Привет, чем я могу помочь вам сегодня?",
     "description": "Я полезный ассистент, который поможет вам с вашими вопросами.",
     "prompt1": "Давайте начнём новое путешествие!",
-    "prompt2": "Расскажи мне, какими навыками ты обладаешь?"
+    "prompt2": "Расскажи мне, какими навыками ты обладаешь?",
+    "compressedSummary": {
+      "title": "Сводка контекста"
+    }
   },
   "security": {
     "title": "Безопасность",
@@ -772,6 +846,17 @@
     "title": "Вход в CoPaw",
     "registerTitle": "Создание аккаунта",
     "firstUserHint": "Создайте учётную запись администратора для начала работы",
+    "feishuFirstUserHint": "Войдите с корпоративного аккаунта Feishu",
+    "feishuLogin": "Войти через Feishu",
+    "feishuErrors": {
+      "access_denied": "Авторизация Feishu отменена",
+      "no_code": "Некорректный ответ OAuth, повторите попытку",
+      "auth_failed": "Вход через Feishu не удался, повторите попытку",
+      "forbidden_tenant": "Разрешены только аккаунты вашего корпоративного арендатора Feishu",
+      "feishu_not_configured": "Вход через Feishu не настроен",
+      "password_login_local_only": "Войдите через Feishu; пароль доступен только с localhost сервера",
+      "registration_disabled_use_feishu": "Включён Feishu; регистрация по паролю отключена"
+    },
     "usernamePlaceholder": "Имя пользователя",
     "passwordPlaceholder": "Пароль",
     "usernameRequired": "Пожалуйста, введите имя пользователя",

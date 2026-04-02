@@ -1,0 +1,58 @@
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 4px 10px 4px 6px;
+  border-radius: 8px;
+  outline: none;
+  color: rgba(0, 0, 0, 0.75);
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px rgba(97, 92, 237, 0.25);
+  }
+}
+
+.userName {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.caret {
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+/* 与顶栏其它 text 导航一致：退出登录不用危险色 */
+.menuItemLogout {
+  color: inherit !important;
+
+  &:hover {
+    color: inherit !important;
+  }
+}
+
+:global(html.dark-mode) {
+  .trigger {
+    color: rgba(255, 255, 255, 0.75);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  .userName {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .caret {
+    color: rgba(255, 255, 255, 0.45);
+  }
+}

@@ -157,3 +157,62 @@
   max-height: 500px;
   overflow: auto;
 }
+
+/* ─── Dark mode ─────────────────────────────────────────────────────────────── */
+:global(.dark-mode) {
+  .mcpTitle {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .description {
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .typeBadge {
+    &.local {
+      background-color: rgba(24, 144, 255, 0.12);
+      color: #69b1ff;
+      border-color: rgba(24, 144, 255, 0.25);
+    }
+
+    &.remote {
+      background-color: rgba(250, 140, 22, 0.12);
+      color: #ffa940;
+      border-color: rgba(250, 140, 22, 0.25);
+    }
+  }
+
+  .cardFooter {
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .statusDot.disabled {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .statusText.disabled {
+    color: rgba(255, 255, 255, 0.3);
+  }
+
+  .mcpCard {
+    &.normal {
+      border-color: rgba(255, 255, 255, 0.08) !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    &.hover {
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4) !important;
+    }
+  }
+
+  .editJsonTextArea {
+    background: #2a2a2a;
+    border-color: rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .preformattedText {
+    background-color: #2a2a2a;
+    color: rgba(255, 255, 255, 0.85);
+  }
+}

@@ -16,6 +16,7 @@ from .file_search import (
     glob_search,
 )
 from .shell import execute_shell_command
+from .git_ops import propose_git_commit
 from .send_file import send_file_to_user
 from .browser_control import browser_use
 from .desktop_screenshot import desktop_screenshot
@@ -27,6 +28,7 @@ from .get_token_usage import get_token_usage
 __all__ = [
     "execute_python_code",
     "execute_shell_command",
+    "propose_git_commit",
     "view_text_file",
     "write_text_file",
     "read_file",

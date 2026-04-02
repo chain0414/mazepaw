@@ -51,10 +51,21 @@ export function AgentTable({
       ellipsis: true,
     },
     {
+      title: t("agent.template"),
+      dataIndex: "template_id",
+      key: "template_id",
+      render: (value: string) => t(`agent.templates.${value}`),
+    },
+    {
       title: t("agent.workspace"),
       dataIndex: "workspace_dir",
       key: "workspace_dir",
       ellipsis: true,
+    },
+    {
+      title: t("agent.repoCount"),
+      dataIndex: "repo_count",
+      key: "repo_count",
     },
     {
       title: t("common.actions"),

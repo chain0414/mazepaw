@@ -1,20 +1,73 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button, Card, Form, Input, message } from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { authApi } from "../../api/modules/auth";
-import { setAuthToken } from "../../api/config";
+import { setAuthToken, getApiUrl } from "../../api/config";
+import { useTheme } from "../../contexts/ThemeContext";
+
+function safeRedirectPath(raw: string | null): string {
+  if (
+    raw &&
+    raw.startsWith("/") &&
+    !raw.startsWith("//") &&
+    !raw.includes("..")
+  ) {
+    return raw;
+  }
+  return "/chat";
+}
 
 export default function LoginPage() {
+  const { isDark } = useTheme();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [isRegister, setIsRegister] = useState(false);
   const [hasUsers, setHasUsers] = useState(true);
+  const [feishuAvailable, setFeishuAvailable] = useState(false);
+  const [passwordAllowed, setPasswordAllowed] = useState(true);
+
+  const mapDetailToMessage = useCallback(
+    (detail: string): string => {
+      const feishuPrefix = "login.feishuErrors.";
+      const known = [
+        "password_login_local_only",
+        "registration_disabled_use_feishu",
+        "access_denied",
+        "no_code",
+        "auth_failed",
+        "forbidden_tenant",
+        "feishu_not_configured",
+      ];
+      if (known.includes(detail)) {
+        const key = `${feishuPrefix}${detail}`;
+        return t(key);
+      }
+      return detail;
+    },
+    [t],
+  );
 
   useEffect(() => {
+    const token = searchParams.get("token");
+    const oauthError = searchParams.get("error");
+    const redirect = safeRedirectPath(searchParams.get("redirect"));
+
+    if (token) {
+      setAuthToken(token);
+      navigate(redirect, { replace: true });
+      window.history.replaceState({}, "", window.location.pathname);
+      return;
+    }
+
+    if (oauthError) {
+      message.error(mapDetailToMessage(oauthError));
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+
     authApi
       .getStatus()
       .then((res) => {
@@ -23,19 +76,21 @@ export default function LoginPage() {
           return;
         }
         setHasUsers(res.has_users);
-        if (!res.has_users) {
+        setFeishuAvailable(res.feishu_login_available);
+        setPasswordAllowed(res.password_login_allowed);
+        if (!res.has_users && !res.feishu_login_available) {
           setIsRegister(true);
+        } else {
+          setIsRegister(false);
         }
       })
       .catch(() => {});
-  }, [navigate]);
+  }, [navigate, searchParams, mapDetailToMessage]);
 
   const onFinish = async (values: { username: string; password: string }) => {
     setLoading(true);
     try {
-      const raw = searchParams.get("redirect") || "/chat";
-      const redirect =
-        raw.startsWith("/") && !raw.startsWith("//") ? raw : "/chat";
+      const redirect = safeRedirectPath(searchParams.get("redirect"));
 
       if (isRegister) {
         const res = await authApi.register(values.username, values.password);
@@ -55,17 +110,23 @@ export default function LoginPage() {
         }
       }
     } catch (err) {
-      message.error(
-        isRegister
-          ? err instanceof Error
-            ? err.message
-            : t("login.registerFailed")
-          : t("login.failed"),
-      );
+      const detail =
+        err instanceof Error ? err.message : t("login.failed");
+      message.error(mapDetailToMessage(detail));
     } finally {
       setLoading(false);
     }
   };
+
+  const startFeishu = () => {
+    const returnTo = safeRedirectPath(searchParams.get("redirect"));
+    const url = `${getApiUrl("/auth/feishu")}?returnTo=${encodeURIComponent(returnTo)}`;
+    window.location.href = url;
+  };
+
+  const showPasswordForm =
+    passwordAllowed && (hasUsers || !feishuAvailable);
+  const showFirstUserPasswordHint = !hasUsers && !feishuAvailable;
 
   return (
     <div
@@ -74,7 +135,9 @@ export default function LoginPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+        background: isDark
+          ? "linear-gradient(135deg, #0f0f14 0%, #1a1a2e 100%)"
+          : "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
       }}
     >
       <Card
@@ -93,7 +156,7 @@ export default function LoginPage() {
           <h2 style={{ margin: 0, fontWeight: 600, fontSize: 20 }}>
             {isRegister ? t("login.registerTitle") : t("login.title")}
           </h2>
-          {!hasUsers && (
+          {showFirstUserPasswordHint ? (
             <p
               style={{
                 margin: "8px 0 0",
@@ -103,48 +166,82 @@ export default function LoginPage() {
             >
               {t("login.firstUserHint")}
             </p>
-          )}
+          ) : null}
+          {!hasUsers && feishuAvailable ? (
+            <p
+              style={{
+                margin: "8px 0 0",
+                color: "#666",
+                fontSize: 13,
+              }}
+            >
+              {t("login.feishuFirstUserHint")}
+            </p>
+          ) : null}
         </div>
 
-        <Form
-          layout="vertical"
-          onFinish={onFinish}
-          autoComplete="off"
-          size="large"
-        >
-          <Form.Item
-            name="username"
-            rules={[{ required: true, message: t("login.usernameRequired") }]}
+        {feishuAvailable ? (
+          <Button
+            type="primary"
+            block
+            size="large"
+            onClick={startFeishu}
+            style={{
+              height: 44,
+              marginBottom: showPasswordForm ? 20 : 0,
+              borderRadius: 8,
+              fontWeight: 500,
+            }}
           >
-            <Input
-              prefix={<UserOutlined />}
-              placeholder={t("login.usernamePlaceholder")}
-              autoFocus
-            />
-          </Form.Item>
+            {t("login.feishuLogin")}
+          </Button>
+        ) : null}
 
-          <Form.Item
-            name="password"
-            rules={[{ required: true, message: t("login.passwordRequired") }]}
+        {showPasswordForm ? (
+          <Form
+            layout="vertical"
+            onFinish={onFinish}
+            autoComplete="off"
+            size="large"
           >
-            <Input.Password
-              prefix={<LockOutlined />}
-              placeholder={t("login.passwordPlaceholder")}
-            />
-          </Form.Item>
-
-          <Form.Item style={{ marginBottom: 0, marginTop: 8 }}>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              block
-              style={{ height: 44, borderRadius: 8, fontWeight: 500 }}
+            <Form.Item
+              name="username"
+              rules={[
+                { required: true, message: t("login.usernameRequired") },
+              ]}
             >
-              {isRegister ? t("login.register") : t("login.submit")}
-            </Button>
-          </Form.Item>
-        </Form>
+              <Input
+                prefix={<UserOutlined />}
+                placeholder={t("login.usernamePlaceholder")}
+                autoFocus={!feishuAvailable}
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="password"
+              rules={[
+                { required: true, message: t("login.passwordRequired") },
+              ]}
+            >
+              <Input.Password
+                prefix={<LockOutlined />}
+                placeholder={t("login.passwordPlaceholder")}
+              />
+            </Form.Item>
+
+            <Form.Item style={{ marginBottom: 0, marginTop: 8 }}>
+              <Button
+                type={feishuAvailable ? "default" : "primary"}
+                htmlType="submit"
+                loading={loading}
+                block
+                style={{ height: 44, borderRadius: 8, fontWeight: 500 }}
+              >
+                {isRegister ? t("login.register") : t("login.submit")}
+              </Button>
+            </Form.Item>
+          </Form>
+        ) : null}
       </Card>
     </div>
   );

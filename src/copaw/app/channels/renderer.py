@@ -228,6 +228,27 @@ class MessageRenderer:
                     )
                     continue
 
+                if isinstance(output, dict) and output.get("schema") == (
+                    "copaw_git_propose_commit_v1"
+                ):
+                    md = (output.get("markdown_summary") or "").strip()
+                    if md:
+                        out.append(
+                            TextContent(
+                                text=_fmt_tool_output_label(name, s) + "\n\n" + md,
+                            ),
+                        )
+                    elif s.show_tool_details:
+                        err = output.get("error")
+                        if err:
+                            out.append(
+                                TextContent(
+                                    text=_fmt_tool_output_label(name, s)
+                                    + _fmt_code_block(str(err), s),
+                                ),
+                            )
+                    continue
+
                 if output is not None:
                     raw = str(output)
                     preview = (

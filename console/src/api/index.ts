@@ -22,6 +22,9 @@ import { tokenUsageApi } from "./modules/tokenUsage";
 import { toolsApi } from "./modules/tools";
 import { securityApi } from "./modules/security";
 import { userTimezoneApi } from "./modules/userTimezone";
+import { insightsApi } from "./modules/insights";
+import { credentialsApi } from "./modules/credentials";
+import { gitApi } from "./modules/git";
 
 export const api = {
   // Root
@@ -76,9 +79,17 @@ export const api = {
 
   // User Timezone
   ...userTimezoneApi,
+
+  // Inbox-compatible insights
+  ...insightsApi,
+
+  // Git (console)
+  ...gitApi,
 };
 
 export default api;
 
 // Export individual APIs for direct access
 export { agentsApi };
+export { credentialsApi };
+export { gitApi };

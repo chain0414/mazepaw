@@ -71,9 +71,11 @@ Desktop.ini
 # Python
 *.py[cod]
 *$py.class
-uv.lock
 venv/
 .venv/
+# uv: virtualenv defaults to .venv (above). Global cache is ~/.cache/uv unless UV_CACHE_DIR is set.
+# Project-local uv metadata (workspaces / future); do not commit. uv.lock is tracked on purpose.
+.uv/
 providers.json
 
 # Logs

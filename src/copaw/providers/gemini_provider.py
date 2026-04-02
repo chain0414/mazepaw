@@ -7,9 +7,18 @@ from __future__ import annotations
 from typing import Any, List
 
 from agentscope.model import ChatModelBase
-from google import genai
-from google.genai import errors as genai_errors
-from google.genai import types as genai_types
+
+try:
+    from google import genai
+    from google.genai import errors as genai_errors
+    from google.genai import types as genai_types
+
+    _GENAI_AVAILABLE = True
+except ImportError:
+    genai = None
+    genai_errors = None
+    genai_types = None
+    _GENAI_AVAILABLE = False
 
 from copaw.providers.provider import ModelInfo, Provider
 
@@ -18,6 +27,8 @@ class GeminiProvider(Provider):
     """Provider implementation for Google Gemini API."""
 
     def _client(self, timeout: float = 10) -> Any:
+        if not _GENAI_AVAILABLE:
+            raise RuntimeError("google-genai is not installed")
         return genai.Client(
             api_key=self.api_key,
             http_options=genai_types.HttpOptions(timeout=int(timeout * 1000)),
@@ -57,6 +68,8 @@ class GeminiProvider(Provider):
 
     async def check_connection(self, timeout: float = 10) -> tuple[bool, str]:
         """Check if Google Gemini provider is reachable."""
+        if not _GENAI_AVAILABLE:
+            return False, "google-genai is not installed"
         try:
             client = self._client(timeout=timeout)
             # Use the async list models endpoint to verify connectivity
@@ -77,6 +90,8 @@ class GeminiProvider(Provider):
 
     async def fetch_models(self, timeout: float = 10) -> List[ModelInfo]:
         """Fetch available models from Gemini API."""
+        if not _GENAI_AVAILABLE:
+            return []
         try:
             client = self._client(timeout=timeout)
             payload = []
@@ -95,6 +110,8 @@ class GeminiProvider(Provider):
         timeout: float = 10,
     ) -> tuple[bool, str]:
         """Check if a specific Gemini model is reachable/usable."""
+        if not _GENAI_AVAILABLE:
+            return False, "google-genai is not installed"
         target = (model_id or "").strip()
         if not target:
             return False, "Empty model ID"
@@ -120,6 +137,8 @@ class GeminiProvider(Provider):
             )
 
     def get_chat_model_instance(self, model_id: str) -> ChatModelBase:
+        if not _GENAI_AVAILABLE:
+            raise RuntimeError("google-genai is not installed")
         from agentscope.model import GeminiChatModel
 
         return GeminiChatModel(

@@ -28,6 +28,12 @@ ENV WORKSPACE_DIR=/app
 ENV COPAW_WORKING_DIR=/app/working
 ENV COPAW_SECRET_DIR=/app/working.secret
 
+# Feishu OAuth for Web Console (optional, with COPAW_AUTH_ENABLED=true at runtime):
+# 1) In Feishu app → Security → add redirect URL: https://<host>/api/auth/callback/feishu
+# 2) Runtime: FEISHU_APP_ID, FEISHU_APP_SECRET, FEISHU_REDIRECT_URI (must match exactly),
+#    FEISHU_ALLOWED_TENANT_KEYS (comma-separated; get tenant_key from token/user_info after one login)
+# Optional: COPAW_PUBLIC_ORIGIN (if behind TLS proxy), COPAW_CONSOLE_BASE_PATH=/console
+
 # Channel filtering: use COPAW_DISABLED_CHANNELS (exclusion, recommended)
 # or COPAW_ENABLED_CHANNELS (whitelist). Override at runtime with -e.
 ARG COPAW_DISABLED_CHANNELS="imessage"

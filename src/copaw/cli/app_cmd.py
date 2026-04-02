@@ -3,13 +3,33 @@ from __future__ import annotations
 
 import logging
 import os
+from pathlib import Path
 
 import click
 import uvicorn
+from dotenv import load_dotenv
 
 from ..constant import LOG_LEVEL_ENV
 from ..config.utils import write_last_api
 from ..utils.logging import setup_logger, SuppressPathAccessLogFilter
+
+
+def _load_app_dotenv() -> None:
+    """Load ``.env`` from cwd and ``COPAW_WORKING_DIR``; shell exports win."""
+    candidates = [
+        Path.cwd() / ".env",
+        Path(os.environ.get("COPAW_WORKING_DIR", "~/.copaw")).expanduser() / ".env",
+    ]
+    seen: set[Path] = set()
+    for path in candidates:
+        try:
+            resolved = path.resolve()
+        except OSError:
+            continue
+        if resolved in seen or not resolved.is_file():
+            continue
+        seen.add(resolved)
+        load_dotenv(resolved, override=False)
 
 
 @click.command("app")
@@ -51,6 +71,12 @@ from ..utils.logging import setup_logger, SuppressPathAccessLogFilter
     show_default=True,
     help="Path substrings to hide from uvicorn access log (repeatable).",
 )
+@click.option(
+    "--reload-exclude",
+    multiple=True,
+    default=(),
+    help="Glob(s) excluded from reload watch (repeatable; dev only).",
+)
 def app_cmd(
     host: str,
     port: int,
@@ -58,8 +84,10 @@ def app_cmd(
     workers: int,
     log_level: str,
     hide_access_paths: tuple[str, ...],
+    reload_exclude: tuple[str, ...],
 ) -> None:
     """Run CoPaw FastAPI app."""
+    _load_app_dotenv()
     # Persist last used host/port for other terminals
     write_last_api(host, port)
     os.environ[LOG_LEVEL_ENV] = log_level
@@ -88,6 +116,7 @@ def app_cmd(
         host=host,
         port=port,
         reload=reload,
+        reload_excludes=list(reload_exclude) if reload_exclude else None,
         workers=workers,
         log_level=log_level,
     )

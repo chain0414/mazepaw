@@ -11,7 +11,9 @@ wait_for, pdf, close. Uses refs from snapshot for ref-based actions.
 
 import asyncio
 import atexit
+import base64
 from concurrent import futures
+import io
 import json
 import logging
 import os
@@ -179,6 +181,32 @@ def _tool_response(text: str) -> ToolResponse:
     return ToolResponse(
         content=[TextBlock(type="text", text=text)],
     )
+
+
+def _screenshot_preview_data_url(file_path: str) -> str:
+    """Encode a saved screenshot as a JPEG (quality 75) data URL for UI preview."""
+    from PIL import Image
+
+    with open(file_path, "rb") as f:
+        raw = f.read()
+    try:
+        image = Image.open(io.BytesIO(raw))
+        if image.mode in ("RGBA", "P"):
+            image = image.convert("RGB")
+        buf = io.BytesIO()
+        image.save(buf, format="JPEG", quality=75, optimize=True)
+        jpeg_bytes = buf.getvalue()
+        return (
+            "data:image/jpeg;base64,"
+            + base64.b64encode(jpeg_bytes).decode("ascii")
+        )
+    except Exception:
+        mime = (
+            "image/jpeg"
+            if file_path.lower().endswith((".jpg", ".jpeg"))
+            else "image/png"
+        )
+        return f"data:{mime};base64,{base64.b64encode(raw).decode('ascii')}"
 
 
 def _chromium_launch_args() -> list[str]:
@@ -1183,16 +1211,18 @@ async def _action_screenshot(
                         if screenshot_type == "jpeg"
                         else "png",
                     )
+        payload: dict[str, Any] = {
+            "ok": True,
+            "message": f"Screenshot saved to {path}",
+            "path": path,
+        }
+        try:
+            if os.path.isfile(path):
+                payload["image_data_url"] = _screenshot_preview_data_url(path)
+        except OSError:
+            pass
         return _tool_response(
-            json.dumps(
-                {
-                    "ok": True,
-                    "message": f"Screenshot saved to {path}",
-                    "path": path,
-                },
-                ensure_ascii=False,
-                indent=2,
-            ),
+            json.dumps(payload, ensure_ascii=False, indent=2),
         )
     except Exception as e:
         return _tool_response(

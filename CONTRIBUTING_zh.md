@@ -69,13 +69,13 @@ docs(skills): document Skills Hub import
 
 - **本地必跑门禁（push/提 PR 前必须通过）：**
   ```bash
-  pip install -e ".[dev,full]"
-  pre-commit install
-  pre-commit run --all-files
-  pytest
+  uv sync --extra dev --extra full
+  uv run pre-commit install
+  uv run pre-commit run --all-files
+  uv run pytest
   ```
 - **如果 pre-commit 自动修改了文件：** 先提交这些修改，再重复执行
-  `pre-commit run --all-files`，直到无修改且通过。
+  `uv run pre-commit run --all-files`，直到无修改且通过。
 - **CI 策略：** pre-commit 检查失败的 PR 视为未就绪（not merge-ready）。
 - **前端代码格式化：** 如果你的修改涉及到 `console` 或 `website` 目录，请在提交前运行格式化：
   ```bash

@@ -4,15 +4,54 @@ from __future__ import annotations
 
 import json
 import logging
+from pathlib import Path
 from typing import AsyncGenerator, Union
 
 from fastapi import APIRouter, HTTPException, Query, Request
+from pydantic import BaseModel, Field
 from starlette.responses import StreamingResponse
 
 from agentscope_runtime.engine.schemas.agent_schemas import AgentRequest
+from ...agents.tools.git_ops import execute_git_commit
+from ...config.config import AgentProfileConfig, load_agent_config
 from ..agent_context import get_agent_for_request
 
 logger = logging.getLogger(__name__)
+
+
+class GitCommitRequest(BaseModel):
+    """Body for POST /console/git/commit."""
+
+    files: list[str] = Field(..., description="Repo-relative paths to stage and commit")
+    message: str = Field(..., description="Commit message")
+    cwd: str = Field("", description="Repository root; required if multiple repos bound")
+    push: bool = Field(True, description="Run git push after commit")
+
+
+def _resolve_allowed_repo(agent_cfg: AgentProfileConfig, cwd: str | None) -> Path:
+    roots = [
+        Path(a.local_path).expanduser().resolve()
+        for a in (agent_cfg.repo_assets or [])
+    ]
+    if not roots:
+        raise HTTPException(
+            status_code=400,
+            detail="Agent has no bound git repositories",
+        )
+    if cwd and cwd.strip():
+        candidate = Path(cwd).expanduser().resolve()
+        if not any(candidate == r for r in roots):
+            raise HTTPException(
+                status_code=403,
+                detail="Repository path is not allowed for this agent",
+            )
+        return candidate
+    if len(roots) == 1:
+        return roots[0]
+    raise HTTPException(
+        status_code=400,
+        detail="cwd is required when multiple repositories are bound",
+    )
 
 router = APIRouter(prefix="/console", tags=["console"])
 
@@ -131,6 +170,38 @@ async def post_console_chat(
             "Connection": "keep-alive",
         },
     )
+
+
+@router.post(
+    "/git/commit",
+    status_code=200,
+    summary="Stage files, commit, and optionally push",
+)
+async def post_git_commit(
+    request: Request,
+    body: GitCommitRequest,
+) -> dict:
+    """Execute git add / commit / push in an agent-bound repository."""
+    workspace = await get_agent_for_request(request)
+    try:
+        agent_cfg = load_agent_config(workspace.agent_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+    repo = _resolve_allowed_repo(agent_cfg, body.cwd or None)
+    result = await execute_git_commit(
+        repo,
+        body.files,
+        body.message,
+        body.push,
+        agent_cfg,
+    )
+    if not result.get("success"):
+        raise HTTPException(
+            status_code=400,
+            detail=result.get("error") or "git commit failed",
+        )
+    return result
 
 
 @router.post(

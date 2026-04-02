@@ -33,6 +33,8 @@
     "sessions": "会话",
     "cronJobs": "定时任务",
     "heartbeat": "心跳",
+    "dailyDigest": "每日洞察",
+    "reviewQueue": "待审核队列",
     "agent": "智能体",
     "workspace": "工作区",
     "skills": "技能",
@@ -45,7 +47,8 @@
     "environments": "环境变量",
     "security": "安全",
     "tokenUsage": "Token 消耗",
-    "voiceTranscription": "语音转写"
+    "voiceTranscription": "语音转写",
+    "credentials": "凭据"
   },
   "workspace": {
     "title": "工作区",
@@ -77,6 +80,14 @@
     "id": "ID",
     "description": "描述",
     "workspace": "工作区路径",
+    "template": "模板",
+    "repoCount": "仓库数",
+    "boundRepos": "绑定仓库",
+    "repoId": "仓库 ID",
+    "repoName": "仓库名称",
+    "repoLocalPath": "本地路径",
+    "repoRemoteUrl": "远端地址",
+    "addRepo": "添加仓库",
     "create": "创建智能体",
     "createTitle": "创建新智能体",
     "createSuccess": "智能体创建成功",
@@ -105,7 +116,155 @@
     "descriptionPlaceholder": "简要描述这个智能体的用途...",
     "workspaceHelp": "留空将自动生成在 ~/.copaw/workspaces/<id> 目录",
     "defaultNotEditable": "默认智能体不允许编辑",
-    "defaultNotDeletable": "默认智能体不允许删除"
+    "defaultNotDeletable": "默认智能体不允许删除",
+    "gitCredential": "Git 身份 / 凭据",
+    "gitCredentialHint": "在「凭据」页创建档案后在此选择；仅保存引用，不存储明文密钥。",
+    "gitCredentialPlaceholder": "选择已配置的 Git 凭据（可选）",
+    "developerRepoHint": "开发者智能体建议尽快绑定仓库；也可以先创建，后续再补充。远端地址仅用于记录与辅助识别，不会自动创建新仓库。",
+    "developerNoRepoAlert": "开发者智能体建议至少绑定一个仓库，否则大部分编码与 Git 相关能力无法正常工作。",
+    "gitCredentialPushHint": "推送代码到远端通常需要 Git 凭据。",
+    "goToCredentials": "去配置凭据",
+    "repoIdPlaceholder": "例如 my-repo",
+    "repoNamePlaceholder": "例如 My project",
+    "repoLocalPathPlaceholder": "例如 /path/to/repo",
+    "repoIdRequired": "请输入仓库 ID",
+    "repoNameRequired": "请输入仓库名称",
+    "repoLocalPathRequired": "请输入本地路径",
+    "repoRemoteUrlHelp": "可选。粘贴常见 Git SSH/HTTPS 地址后，会在仓库 ID 和名称为空时自动补全。",
+    "ossResearchDesc": "用于开源发现与每日洞察；仓库绑定为可选，可在工作区中编辑 RESEARCH.md。",
+    "templates": {
+      "general": "通用智能体",
+      "developer": "开发者",
+      "oss_researcher": "开源项目研究员"
+    }
+  },
+  "credentials": {
+    "title": "凭据",
+    "pageDescription": "集中管理 Git 等身份引用；敏感信息仅通过 secret 引用配置，不明文写入智能体配置。",
+    "addGit": "添加 Git 凭据",
+    "groups": {
+      "git": "Git",
+      "social": "社交 / 发布",
+      "deploy": "部署"
+    },
+    "gitHelp": "使用引导流程添加 GitHub 账户（SSH 密钥、提交身份、可选写入 ~/.ssh/config），或编辑已有档案。敏感信息仅作引用，勿在此粘贴私钥。",
+    "socialHelp": "后续将支持浏览器辅助采集 Cookie / Session 等。",
+    "deployHelp": "后续将支持 SSH 主机、镜像仓库等连通性检查与凭据引用。",
+    "comingSoon": "即将支持",
+    "loadFailed": "加载凭据失败",
+    "saveFailed": "保存失败",
+    "createSuccess": "凭据已创建",
+    "updateSuccess": "凭据已更新",
+    "deleteSuccess": "凭据已删除",
+    "deleteFailed": "删除失败",
+    "deleteConfirm": "确认删除该凭据？",
+    "createTitle": "新建 Git 凭据",
+    "editTitle": "编辑 Git 凭据",
+    "columns": {
+      "name": "名称",
+      "gitIdentity": "提交身份",
+      "provider": "平台",
+      "authMethod": "认证方式",
+      "secretRef": "Secret 引用"
+    },
+    "fields": {
+      "name": "显示名称",
+      "provider": "平台 / Provider",
+      "authMethod": "认证方式",
+      "secretRef": "Secret 引用",
+      "acquisitionNotes": "获取说明",
+      "gitUserName": "Git 用户名",
+      "gitUserEmail": "Git 邮箱"
+    },
+    "placeholders": {
+      "name": "例如：个人 GitHub",
+      "notes": "如何生成 SSH Key、从哪里创建 token…",
+      "gitUserName": "提交记录中显示的名字",
+      "gitUserEmail": "提交邮箱（可用 GitHub noreply）"
+    },
+    "secretRefHelp": "填写环境变量名或密钥路径引用，勿粘贴明文私钥。",
+    "wizard": {
+      "title": "添加 GitHub 账户",
+      "stepKeys": "SSH 密钥",
+      "stepGithub": "在 GitHub 添加公钥",
+      "stepTest": "测试连接",
+      "stepIdentity": "提交身份",
+      "stepSshConfig": "SSH 配置",
+      "stepSave": "保存",
+      "keysIntro": "选择 ~/.ssh 下已有的密钥对，或生成新密钥。",
+      "noKeys": "未发现 SSH 密钥对，可在下方生成。",
+      "generateKey": "生成新密钥",
+      "generateTitle": "生成 SSH 密钥",
+      "generateConfirm": "生成",
+      "keyName": "密钥文件名（位于 ~/.ssh）",
+      "keyNameAutoHint": "打开时已自动生成随机默认名（id_ed25519_copaw_…）。可先填写上方邮箱：在未手工修改本字段前，文件名会随邮箱本地部分变为 id_ed25519_<本地部分>（已做合法化）。",
+      "keyComment": "注释（常用邮箱）",
+      "keyNameRequired": "请填写密钥文件名",
+      "keyGenerated": "密钥已生成",
+      "keyGenFailed": "密钥生成失败",
+      "githubAddIntro": "将以下公钥添加到 GitHub，然后继续。",
+      "openGithubSsh": "打开 GitHub SSH 设置",
+      "publicKey": "公钥",
+      "copyPubKey": "复制",
+      "copied": "已复制",
+      "copyFailed": "复制失败",
+      "testIntro": "验证 GitHub 是否接受该 SSH 密钥。",
+      "runTest": "运行 SSH 测试",
+      "testOk": "成功 — 已认证为 {{user}}",
+      "testFailed": "SSH 测试失败",
+      "sshConfigIntro": "可选：向 ~/.ssh/config 追加 Host，便于在终端用自定义主机别名使用此密钥（例如 git@github.com-work:owner/repo.git）。写入后可查看完整文件。",
+      "hostAlias": "Host 别名",
+      "previewConfig": "预览合并后的文件",
+      "applyConfig": "写入 ~/.ssh/config",
+      "skipSshConfig": "跳过（仅 CoPaw 仍可通过该密钥使用 GIT_SSH）",
+      "previewLabel": "预览（追加后的 ~/.ssh/config）",
+      "fullConfigLabel": "当前 ~/.ssh/config（写入后）",
+      "sshApplied": "SSH 配置已更新",
+      "sshApplyFailed": "无法写入 SSH 配置",
+      "saveSummary": "私钥路径将引用保存为：{{key}}",
+      "credNameRequired": "请填写显示名称",
+      "identityRequired": "请填写 Git 用户名与邮箱",
+      "pickKey": "请先选择或生成 SSH 密钥",
+      "testFirst": "请先通过 SSH 测试",
+      "next": "下一步",
+      "back": "上一步"
+    }
+  },
+  "dailyDigest": {
+    "title": "每日洞察",
+    "description": "这是收件箱中的洞察视图，用于查看 Agent 主动送达的摘要与发现。",
+    "columns": {
+      "title": "标题",
+      "summary": "摘要",
+      "sources": "来源",
+      "repoScope": "关联对象",
+      "agent": "来源智能体",
+      "createdAt": "创建时间"
+    }
+  },
+  "reviewQueue": {
+    "title": "待审核队列",
+    "description": "这是收件箱中的待处理视图，用于集中处理需要你拍板的动作。",
+    "approve": "批准",
+    "deny": "拒绝",
+    "resolveSuccess": "处理成功",
+    "resolveFailed": "处理失败",
+    "submitMrReview": "提交 MR 审核",
+    "submitMrReviewTitle": "提交合并请求审核",
+    "mrTitle": "标题",
+    "mrSummary": "说明与变更摘要",
+    "mrUrl": "MR 链接（可选）",
+    "mrTitleRequired": "请填写标题",
+    "mrSummaryRequired": "请填写说明",
+    "submitMrSuccess": "已加入待审核队列",
+    "submitMrFailed": "提交失败",
+    "columns": {
+      "title": "标题",
+      "type": "类型",
+      "status": "状态",
+      "summary": "摘要",
+      "agent": "来源智能体"
+    }
   },
   "skills": {
     "title": "技能",
@@ -620,6 +779,7 @@
   "modelConfig": {
     "promptTitle": "需要配置 LLM 模型",
     "promptMessage": "聊天功能需要 LLM 模型才能运行。未配置模型时，对话和消息无法发送到后端进行处理和保存，刷新页面后将会丢失。是否立即配置模型？",
+    "promptHintInChat": "若已在「模型」页配置过提供商，请点击「跳过」，然后在聊天页顶部右侧的下拉菜单中选择当前使用的模型；或在「模型」页的「LLM 配置」中选择提供商与模型后保存。",
     "configureButton": "配置模型",
     "skipButton": "跳过",
     "chatDisabledTitle": "聊天已禁用",
@@ -651,11 +811,19 @@
     }
   },
   "chat": {
+    "modelSelector": {
+      "selectPlaceholder": "选择模型",
+      "noModels": "暂无可选模型",
+      "switchFailed": "切换模型失败"
+    },
     "disclaimer": "懂你所需，伴你左右",
     "greeting": "你好，我今天能帮你做什么？",
     "description": "我是一个智能助手，可以帮助你解答问题。",
     "prompt1": "让我们开启一段新的旅程吧！",
-    "prompt2": "能告诉我你有哪些技能吗？"
+    "prompt2": "能告诉我你有哪些技能吗？",
+    "compressedSummary": {
+      "title": "上下文摘要"
+    }
   },
   "security": {
     "title": "安全",
@@ -781,6 +949,17 @@
     "title": "登录 CoPaw",
     "registerTitle": "创建账户",
     "firstUserHint": "创建管理员账户以开始使用",
+    "feishuFirstUserHint": "请使用企业飞书账号登录",
+    "feishuLogin": "飞书登录",
+    "feishuErrors": {
+      "access_denied": "已取消飞书授权",
+      "no_code": "授权响应无效，请重试",
+      "auth_failed": "飞书授权失败，请重试",
+      "forbidden_tenant": "仅允许本企业飞书账号",
+      "feishu_not_configured": "飞书登录未配置",
+      "password_login_local_only": "请使用飞书登录；密码仅可在服务器本机使用",
+      "registration_disabled_use_feishu": "已启用飞书登录，无法在此注册密码账户"
+    },
     "usernamePlaceholder": "用户名",
     "passwordPlaceholder": "密码",
     "usernameRequired": "请输入用户名",

@@ -32,6 +32,10 @@
   white-space: nowrap;
 }
 
+:global(html.dark-mode) .previewLabel {
+  color: rgba(255, 255, 255, 0.45);
+}
+
 .markdownViewer {
   flex: 1;
   min-height: 300px;
@@ -40,6 +44,11 @@
   border: 1px solid #d9d9d9;
   border-radius: 6px;
   background-color: #fff;
+}
+
+:global(html.dark-mode) .markdownViewer {
+  border-color: rgba(255, 255, 255, 0.12);
+  background-color: #1f1f1f;
 }
 
 .textareaContainer {
@@ -58,4 +67,10 @@
   padding: 12px;
   border: 1px solid #d9d9d9;
   border-radius: 6px;
+}
+
+:global(html.dark-mode) .textarea {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: #2a2a2a;
+  color: rgba(255, 255, 255, 0.85);
 }

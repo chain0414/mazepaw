@@ -1,3 +1,19 @@
+/**
+ * Dark mode: bailian / design tokens can make default Button white-on-white
+ * inside Result modal footers — force readable secondary styling.
+ */
+:global(html.dark-mode) .modelPromptSkipBtn {
+  color: rgba(255, 255, 255, 0.88) !important;
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+:global(html.dark-mode) .modelPromptSkipBtn:hover {
+  color: rgba(255, 255, 255, 0.95) !important;
+  background-color: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
 /* Disabled input overlay */
 .chatDisabledOverlay {
   position: relative;

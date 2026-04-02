@@ -4,6 +4,7 @@ import type {
   AgentProfileConfig,
   CreateAgentRequest,
   AgentProfileRef,
+  RepoConnectivityEntry,
 } from "../types/agents";
 import type { MdFileInfo, MdFileContent } from "../types/workspace";
 
@@ -15,6 +16,10 @@ export const agentsApi = {
   // Get agent details
   getAgent: (agentId: string) =>
     request<AgentProfileConfig>(`/agents/${agentId}`),
+
+  /** Optional: remote reachability probe (may be slow). */
+  getRepoConnectivity: (agentId: string) =>
+    request<RepoConnectivityEntry[]>(`/agents/${agentId}/repo-connectivity`),
 
   // Create new agent
   createAgent: (agent: CreateAgentRequest) =>

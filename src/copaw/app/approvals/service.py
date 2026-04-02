@@ -155,6 +155,16 @@ class ApprovalService:
                     return pending
         return None
 
+    async def list_pending(self) -> list[PendingApproval]:
+        """Return all pending approval records."""
+        async with self._lock:
+            return list(self._pending.values())
+
+    async def list_completed(self) -> list[PendingApproval]:
+        """Return all completed approval records."""
+        async with self._lock:
+            return list(self._completed.values())
+
     async def consume_approval(
         self,
         session_id: str,

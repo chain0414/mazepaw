@@ -69,13 +69,13 @@ docs(skills): document Skills Hub import
 
 - **Required local gate (must pass before push/PR):**
   ```bash
-  pip install -e ".[dev,full]"
-  pre-commit install
-  pre-commit run --all-files
-  pytest
+  uv sync --extra dev --extra full
+  uv run pre-commit install
+  uv run pre-commit run --all-files
+  uv run pytest
   ```
 - **If pre-commit modifies files:** Commit those changes, then rerun
-  `pre-commit run --all-files` until it passes cleanly.
+  `uv run pre-commit run --all-files` until it passes cleanly.
 - **CI policy:** Pull requests with failing pre-commit checks are not merge-ready.
 - **Frontend formatting:** If your changes involve the `console` or `website` directories, run the formatter before committing:
   ```bash

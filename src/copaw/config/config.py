@@ -2,7 +2,7 @@
 import os
 import json
 from pathlib import Path
-from typing import Optional, Union, Dict, List, Literal
+from typing import Any, Optional, Union, Dict, List, Literal
 
 from pydantic import BaseModel, Field, ConfigDict, model_validator
 import shortuuid
@@ -334,6 +334,98 @@ class AgentProfileRef(BaseModel):
     )
 
 
+AgentModuleId = Literal["general", "codeops", "writing_publish", "media_ops"]
+AgentTemplateId = Literal[
+    "general",
+    "developer",
+    "oss_researcher",
+]
+IntegrationKind = Literal["github", "chainos"]
+
+CredentialType = Literal["git", "social", "deploy"]
+
+
+class CredentialProfile(BaseModel):
+    """A stored credential reference (secrets live outside this record)."""
+
+    id: str = Field(..., description="Unique credential profile id")
+    type: CredentialType = Field(..., description="Credential category")
+    provider: str = Field(default="", description="e.g. github, xiaohongshu")
+    name: str = Field(default="", description="Human label")
+    auth_method: str = Field(
+        default="secret_ref",
+        description="e.g. ssh_key_env, token_env, oauth",
+    )
+    secret_ref: str = Field(
+        default="",
+        description="Env var name or secret backend key reference",
+    )
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    acquisition_notes: str = Field(
+        default="",
+        description="How to obtain this credential (shown in UI)",
+    )
+    git_user_name: str = Field(
+        default="",
+        description="Git commit author name (GIT_AUTHOR_NAME / GIT_COMMITTER_NAME)",
+    )
+    git_user_email: str = Field(
+        default="",
+        description="Git commit author email (GIT_AUTHOR_EMAIL / GIT_COMMITTER_EMAIL)",
+    )
+
+
+class CredentialsConfig(BaseModel):
+    """Global credential profiles (root config.json)."""
+
+    profiles: list[CredentialProfile] = Field(default_factory=list)
+
+
+class RepoAssetRef(BaseModel):
+    """Minimal repo asset reference used by repo agents."""
+
+    id: str = Field(..., description="Unique repo asset ID")
+    name: str = Field(..., description="Display name for the repository")
+    local_path: str = Field(..., description="Local checkout path")
+    remote_url: str = Field(
+        default="",
+        description="Optional git remote URL",
+    )
+
+
+class IntegrationRef(BaseModel):
+    """Minimal integration reference bound to an agent."""
+
+    id: str = Field(..., description="Unique integration ID")
+    kind: IntegrationKind = Field(..., description="Integration kind")
+    name: str = Field(..., description="Display name for the integration")
+    config: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Implementation-specific integration metadata",
+    )
+
+
+class OutputPrefsConfig(BaseModel):
+    """Controls how agent outputs are delivered to chat and inbox views."""
+
+    inbox_enabled: bool = Field(
+        default=True,
+        description="Whether structured inbox outputs are enabled",
+    )
+    summary_to_chat: bool = Field(
+        default=True,
+        description="Whether summaries are echoed into the chat session",
+    )
+    digest_enabled: bool = Field(
+        default=True,
+        description="Whether digest-style outputs are enabled",
+    )
+    approvals_enabled: bool = Field(
+        default=True,
+        description="Whether approval outputs should be exposed",
+    )
+
+
 class AgentProfileConfig(BaseModel):
     """Complete Agent Profile configuration (stored in workspace/agent.json).
 
@@ -346,6 +438,30 @@ class AgentProfileConfig(BaseModel):
     workspace_dir: str = Field(
         default="",
         description="Path to agent's workspace (optional, for reference)",
+    )
+    module_id: AgentModuleId = Field(
+        default="general",
+        description="High-level module grouping for the agent",
+    )
+    template_id: AgentTemplateId = Field(
+        default="general",
+        description="Template preset used to initialize the agent",
+    )
+    repo_assets: list[RepoAssetRef] = Field(
+        default_factory=list,
+        description="Repo assets bound to this agent",
+    )
+    integrations: list[IntegrationRef] = Field(
+        default_factory=list,
+        description="Integrations bound to this agent",
+    )
+    output_prefs: OutputPrefsConfig = Field(
+        default_factory=OutputPrefsConfig,
+        description="Output delivery preferences",
+    )
+    git_credential_id: str = Field(
+        default="",
+        description="Optional CredentialProfile id (type=git) bound to this agent",
     )
 
     # Agent-specific configurations
@@ -393,6 +509,16 @@ class AgentProfileConfig(BaseModel):
         default=None,
         description="Security configuration for this agent",
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_legacy_templates(cls, data: Any) -> Any:
+        """Map removed template ids to developer for older agent.json files."""
+        if isinstance(data, dict):
+            tid = data.get("template_id")
+            if tid in ("chainos_agent", "mazechat_agent"):
+                data = {**data, "template_id": "developer"}
+        return data
 
 
 class AgentsConfig(BaseModel):
@@ -640,6 +766,11 @@ def _default_builtin_tools() -> Dict[str, BuiltinToolConfig]:
             enabled=True,
             description="Get llm token usage",
         ),
+        "propose_git_commit": BuiltinToolConfig(
+            name="propose_git_commit",
+            enabled=True,
+            description="Prepare git commit card: status, diffs, suggested message",
+        ),
     }
 
 
@@ -744,6 +875,7 @@ class Config(BaseModel):
     tools: ToolsConfig = Field(default_factory=ToolsConfig)
     last_api: LastApiConfig = LastApiConfig()
     agents: AgentsConfig = Field(default_factory=AgentsConfig)
+    credentials: CredentialsConfig = Field(default_factory=CredentialsConfig)
     last_dispatch: Optional[LastDispatchConfig] = None
     security: SecurityConfig = Field(default_factory=SecurityConfig)
     show_tool_details: bool = True

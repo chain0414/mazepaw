@@ -33,6 +33,7 @@ dependencies = [
     "google-genai>=1.67.0",
     "tzdata>=2024.1",
     "pyyaml>=6.0",
+    "pillow>=10.0.0",
 ]
 
 [tool.setuptools.dynamic]
@@ -57,6 +58,10 @@ include-package-data = true
 [build-system]
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
+
+# Enable `uv sync` / `uv run` for this repo (virtualenv + lockfile). See README Quick Start & Install from source.
+[tool.uv]
+package = true
 
 [project.scripts]
 copaw = "copaw.cli.main:cli"

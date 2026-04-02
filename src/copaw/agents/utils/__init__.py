@@ -24,7 +24,7 @@ from .message_processing import (
 )
 
 # Setup utilities
-from .setup_utils import copy_md_files
+from .setup_utils import collect_md_files_for_template, copy_md_files
 
 # Token counting
 from .token_counting import (
@@ -55,6 +55,7 @@ __all__ = [
     "is_first_user_interaction",
     "prepend_to_message_content",
     # Setup utilities
+    "collect_md_files_for_template",
     "copy_md_files",
     # Token counting
     "_get_token_counter",

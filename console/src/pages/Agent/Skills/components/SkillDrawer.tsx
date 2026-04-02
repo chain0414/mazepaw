@@ -6,6 +6,7 @@ import type { FormInstance } from "antd";
 import type { SkillSpec } from "../../../../api/types";
 import { MarkdownCopy } from "../../../../components/MarkdownCopy/MarkdownCopy";
 import { api } from "../../../../api";
+import { useTheme } from "../../../../contexts/ThemeContext";
 
 /**
  * Parse frontmatter from content string.
@@ -51,6 +52,7 @@ export function SkillDrawer({
   onContentChange,
 }: SkillDrawerProps) {
   const { t, i18n } = useTranslation();
+  const { isDark } = useTheme();
   const [showMarkdown, setShowMarkdown] = useState(true);
   const [contentValue, setContentValue] = useState("");
   const [optimizing, setOptimizing] = useState(false);
@@ -265,13 +267,13 @@ export function SkillDrawer({
             <div
               style={{
                 padding: 12,
-                backgroundColor: "#fffbe6",
-                border: "1px solid #ffe58f",
+                backgroundColor: isDark ? "rgba(250, 173, 20, 0.12)" : "#fffbe6",
+                border: `1px solid ${isDark ? "rgba(250, 173, 20, 0.3)" : "#ffe58f"}`,
                 borderRadius: 4,
                 marginTop: 16,
               }}
             >
-              <p style={{ margin: 0, fontSize: 12, color: "#8c8c8c" }}>
+              <p style={{ margin: 0, fontSize: 12, color: isDark ? "rgba(255, 255, 255, 0.55)" : "#8c8c8c" }}>
                 {t("skills.editNote")}
               </p>
             </div>

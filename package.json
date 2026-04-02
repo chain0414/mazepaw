@@ -1,0 +1,14 @@
+{
+  "name": "mazepaw",
+  "private": true,
+  "packageManager": "pnpm@9.15.3",
+  "description": "Root dev scripts: copaw + embed build to src/copaw/console (Vite also mirrors to console/dist for FastAPI static fallback)",
+  "scripts": {
+    "setup": "npx --yes concurrently@^9.1.2 -n root,console,uv -c blue,magenta,cyan \"pnpm install\" \"pnpm -C console install\" \"uv sync --extra dev\"",
+    "dev": "concurrently -k --kill-signal SIGINT --kill-timeout 1500 -n agent,console -c cyan,magenta \"uv run copaw app --reload --reload-exclude 'src/copaw/console/**'\" \"pnpm -C console run build:embed:watch\"",
+    "dev:full": "pnpm -C console run build:embed && concurrently -k --kill-signal SIGINT --kill-timeout 1500 -n agent,console -c cyan,magenta \"uv run copaw app --reload --reload-exclude 'src/copaw/console/**'\" \"pnpm -C console run build:embed:watch\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

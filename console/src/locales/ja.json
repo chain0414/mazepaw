@@ -42,7 +42,8 @@
     "tokenUsage": "トークン使用量",
     "tools": "ツール",
     "voiceTranscription": "音声文字起こし",
-    "agents": "エージェント管理"
+    "agents": "エージェント管理",
+    "credentials": "認証情報"
   },
   "agent": {
     "management": "エージェント管理",
@@ -79,7 +80,71 @@
     "descriptionPlaceholder": "このエージェントの目的を簡単に説明してください...",
     "workspaceHelp": "空欄のままにすると、~/.copaw/workspaces/<id> に自動生成されます",
     "defaultNotEditable": "デフォルトのエージェントは編集できません",
-    "defaultNotDeletable": "デフォルトのエージェントは削除できません"
+    "defaultNotDeletable": "デフォルトのエージェントは削除できません",
+    "template": "テンプレート",
+    "repoCount": "リポジトリ数",
+    "boundRepos": "バインドされたリポジトリ",
+    "repoId": "リポジトリ ID",
+    "repoName": "リポジトリ名",
+    "repoLocalPath": "ローカルパス",
+    "repoRemoteUrl": "リモート URL",
+    "addRepo": "リポジトリを追加",
+    "gitCredential": "Git 認証情報",
+    "gitCredentialHint": "「認証情報」でプロファイルを作成してから選択します。参照のみ保存されます。",
+    "gitCredentialPlaceholder": "Git 認証情報（任意）",
+    "developerNoRepoAlert": "開発者エージェントは少なくとも 1 つのリポジトリをバインドしてください。未設定だとコーディングや Git 連携がほぼ使えません。",
+    "gitCredentialPushHint": "リモートへプッシュするには通常 Git 認証情報が必要です。",
+    "goToCredentials": "認証情報を開く",
+    "repoIdPlaceholder": "例：my-repo",
+    "repoNamePlaceholder": "例：My project",
+    "repoLocalPathPlaceholder": "例：/path/to/repo",
+    "ossResearchDesc": "OSS の調査と日次ダイジェスト向け。リポジトリのバインドは任意です。",
+    "templates": {
+      "general": "汎用",
+      "developer": "開発者",
+      "oss_researcher": "OSS リサーチャー"
+    }
+  },
+  "credentials": {
+    "title": "認証情報",
+    "pageDescription": "Git などの参照を管理します。秘密情報は参照名のみを保存します。",
+    "addGit": "Git 認証情報を追加",
+    "groups": {
+      "git": "Git",
+      "social": "ソーシャル / 公開",
+      "deploy": "デプロイ"
+    },
+    "gitHelp": "表示名、認証方式、シークレット参照（環境変数名など）を設定します。",
+    "socialHelp": "将来、Cookie / セッション取得をサポート予定です。",
+    "deployHelp": "将来、SSH やレジストリのチェックをサポート予定です。",
+    "comingSoon": "近日対応",
+    "loadFailed": "読み込みに失敗しました",
+    "saveFailed": "保存に失敗しました",
+    "createSuccess": "作成しました",
+    "updateSuccess": "更新しました",
+    "deleteSuccess": "削除しました",
+    "deleteFailed": "削除に失敗しました",
+    "deleteConfirm": "この認証情報を削除しますか？",
+    "createTitle": "Git 認証情報を新規作成",
+    "editTitle": "Git 認証情報を編集",
+    "columns": {
+      "name": "名前",
+      "provider": "プロバイダー",
+      "authMethod": "認証方式",
+      "secretRef": "シークレット参照"
+    },
+    "fields": {
+      "name": "表示名",
+      "provider": "プロバイダー",
+      "authMethod": "認証方式",
+      "secretRef": "シークレット参照",
+      "acquisitionNotes": "取得手順"
+    },
+    "placeholders": {
+      "name": "例：個人用 GitHub",
+      "notes": "SSH やトークンの取得手順…"
+    },
+    "secretRefHelp": "環境変数名やキー参照を入力してください。秘密鍵の本文は貼り付けないでください。"
   },
   "workspace": {
     "title": "ワークスペース",
@@ -606,6 +671,7 @@
   "modelConfig": {
     "promptTitle": "LLMモデルが必要です",
     "promptMessage": "チャット機能にはLLMモデルが必要です。モデルが設定されていない場合、会話やメッセージをバックエンドに送信して処理・保存することができず、ページを更新すると失われます。今すぐモデルを設定しますか？",
+    "promptHintInChat": "モデルページでプロバイダーを設定済みなら「スキップ」を押し、チャット右上のドロップダウンで使用中モデルを選んでください。またはモデルページの「LLM設定」でプロバイダーとモデルを選び保存してください。",
     "configureButton": "モデルを設定",
     "skipButton": "スキップ",
     "chatDisabledTitle": "チャット無効",
@@ -637,11 +703,19 @@
     }
   },
   "chat": {
+    "modelSelector": {
+      "selectPlaceholder": "モデルを選択",
+      "noModels": "利用可能なモデルがありません",
+      "switchFailed": "モデルの切り替えに失敗しました"
+    },
     "disclaimer": "あなたのために働き、あなたと共に成長します",
     "greeting": "こんにちは、今日はどんなお手伝いができますか？",
     "description": "私はあなたの質問をサポートするAIアシスタントです。",
     "prompt1": "新しい旅を始めましょう！",
-    "prompt2": "あなたのスキルを教えてください。"
+    "prompt2": "あなたのスキルを教えてください。",
+    "compressedSummary": {
+      "title": "コンテキスト要約"
+    }
   },
   "security": {
     "title": "セキュリティ",
@@ -767,6 +841,17 @@
     "title": "CoPaw にログイン",
     "registerTitle": "アカウント作成",
     "firstUserHint": "管理者アカウントを作成して始めましょう",
+    "feishuFirstUserHint": "企業のFeishuアカウントでログインしてください",
+    "feishuLogin": "Feishuでログイン",
+    "feishuErrors": {
+      "access_denied": "Feishuの認証がキャンセルされました",
+      "no_code": "無効な応答です。もう一度お試しください",
+      "auth_failed": "Feishuログインに失敗しました。もう一度お試しください",
+      "forbidden_tenant": "自社のFeishuテナントのアカウントのみ利用できます",
+      "feishu_not_configured": "Feishuログインが設定されていません",
+      "password_login_local_only": "Feishuでログインしてください。パスワードはサーバー本体からのみ利用できます",
+      "registration_disabled_use_feishu": "Feishuが有効なためパスワード登録はできません"
+    },
     "usernamePlaceholder": "ユーザー名",
     "passwordPlaceholder": "パスワード",
     "usernameRequired": "ユーザー名を入力してください",

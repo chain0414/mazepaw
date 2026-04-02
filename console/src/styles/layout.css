@@ -626,37 +626,6 @@ html.dark-mode [class*="sender-content"] {
   background: #2a2a2a !important;
 }
 
-/* Chat message bubble text in dark mode */
-html.dark-mode [class*="message-item"] [class*="content"],
-html.dark-mode [class*="chat-anywhere"] [class*="message"] p,
-html.dark-mode [class*="chat-anywhere"] [class*="message"] li,
-html.dark-mode [class*="chat-anywhere"] [class*="message"] h1,
-html.dark-mode [class*="chat-anywhere"] [class*="message"] h2,
-html.dark-mode [class*="chat-anywhere"] [class*="message"] h3,
-html.dark-mode [class*="chat-anywhere"] [class*="message"] h4,
-html.dark-mode [class*="chat-anywhere"] [class*="message"] h5,
-html.dark-mode [class*="chat-anywhere"] [class*="message"] h6,
-html.dark-mode [class*="chat-anywhere"] [class*="message"] span,
-html.dark-mode [class*="chat-anywhere"] [class*="message"] blockquote,
-html.dark-mode [class*="chat-anywhere"] [class*="message"] td,
-html.dark-mode [class*="chat-anywhere"] [class*="message"] th {
-  color: rgba(255, 255, 255, 0.85) !important;
-}
-
-html.dark-mode [class*="chat-anywhere"] [class*="message"] strong,
-html.dark-mode [class*="chat-anywhere"] [class*="message"] b {
-  color: rgba(255, 255, 255, 0.95) !important;
-}
-
-html.dark-mode [class*="chat-anywhere"] [class*="message"] code {
-  color: rgba(255, 255, 255, 0.85) !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-}
-
-html.dark-mode [class*="chat-anywhere"] [class*="message"] a {
-  color: #8b87f5 !important;
-}
-
 #root {
   height: 100%;
   overflow: hidden;
@@ -736,4 +705,222 @@ html.dark-mode [class*="chat-anywhere"] [class*="message"] a {
 [class*="default-header-right"] > * {
   margin-right: auto !important;
   margin-left: 0 !important;
+}
+
+/*
+ * @agentscope-ai/design: `bailianTheme` + `darkAlgorithm` still injects `.css-var-rN` with LIGHT
+ * seed tokens (`--copaw-button-default-bg: #FFFFFF` + light text). `bailianDarkTheme` fixes most
+ * cases; these `!important` rules win over later runtime `<style>` blocks for the same property.
+ */
+html.dark-mode [class*="css-var"] {
+  --copaw-color-bg-base: #141414 !important;
+  --copaw-color-bg-container: #1f1f1f !important;
+  --copaw-color-bg-elevated: #1f1f1f !important;
+  --copaw-color-bg-layout: #141414 !important;
+  --copaw-color-text: rgba(255, 255, 255, 0.85) !important;
+  --copaw-color-text-base: rgba(255, 255, 255, 0.88) !important;
+  --copaw-color-text-secondary: rgba(255, 255, 255, 0.65) !important;
+  --copaw-color-text-tertiary: rgba(255, 255, 255, 0.45) !important;
+  --copaw-color-border: rgba(255, 255, 255, 0.12) !important;
+  --copaw-color-border-secondary: rgba(255, 255, 255, 0.16) !important;
+  --copaw-button-default-bg: #1f1f1f !important;
+  --copaw-button-default-color: rgba(255, 255, 255, 0.88) !important;
+  --copaw-button-default-border-color: rgba(255, 255, 255, 0.22) !important;
+  --copaw-button-default-hover-bg: rgba(255, 255, 255, 0.08) !important;
+  --copaw-button-default-hover-color: rgba(255, 255, 255, 0.95) !important;
+  --copaw-button-default-hover-border-color: rgba(255, 255, 255, 0.3) !important;
+  --copaw-button-default-active-bg: rgba(255, 255, 255, 0.12) !important;
+  --copaw-button-default-active-color: rgba(255, 255, 255, 0.95) !important;
+  --copaw-button-default-active-border-color: rgba(255, 255, 255, 0.35) !important;
+  --copaw-button-text-text-color: rgba(255, 255, 255, 0.85) !important;
+  --copaw-button-text-text-hover-color: rgba(255, 255, 255, 0.95) !important;
+  --copaw-button-text-text-active-color: rgba(255, 255, 255, 0.95) !important;
+  --copaw-button-default-ghost-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+html.dark-mode button.copaw-btn[class*="css-var"],
+html.dark-mode .copaw-btn[class*="css-var"] {
+  --copaw-color-bg-base: #141414 !important;
+  --copaw-color-bg-container: #1f1f1f !important;
+  --copaw-color-bg-elevated: #1f1f1f !important;
+  --copaw-color-bg-layout: #141414 !important;
+  --copaw-color-text: rgba(255, 255, 255, 0.85) !important;
+  --copaw-color-text-base: rgba(255, 255, 255, 0.88) !important;
+  --copaw-color-text-secondary: rgba(255, 255, 255, 0.65) !important;
+  --copaw-color-text-tertiary: rgba(255, 255, 255, 0.45) !important;
+  --copaw-color-border: rgba(255, 255, 255, 0.12) !important;
+  --copaw-color-border-secondary: rgba(255, 255, 255, 0.16) !important;
+  --copaw-button-default-bg: #1f1f1f !important;
+  --copaw-button-default-color: rgba(255, 255, 255, 0.88) !important;
+  --copaw-button-default-border-color: rgba(255, 255, 255, 0.22) !important;
+  --copaw-button-default-hover-bg: rgba(255, 255, 255, 0.08) !important;
+  --copaw-button-default-hover-color: rgba(255, 255, 255, 0.95) !important;
+  --copaw-button-default-hover-border-color: rgba(255, 255, 255, 0.3) !important;
+  --copaw-button-default-active-bg: rgba(255, 255, 255, 0.12) !important;
+  --copaw-button-default-active-color: rgba(255, 255, 255, 0.95) !important;
+  --copaw-button-default-active-border-color: rgba(255, 255, 255, 0.35) !important;
+  --copaw-button-text-text-color: rgba(255, 255, 255, 0.85) !important;
+  --copaw-button-text-text-hover-color: rgba(255, 255, 255, 0.95) !important;
+  --copaw-button-text-text-active-color: rgba(255, 255, 255, 0.95) !important;
+  --copaw-button-default-ghost-color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Outlined default buttons：直接写死 background/background-color，避免仅变量被覆盖 */
+html.dark-mode button.copaw-btn.copaw-btn-variant-outlined.copaw-btn-color-default:not(:disabled):not(.copaw-btn-disabled),
+html.dark-mode button.copaw-btn.copaw-btn-variant-dashed.copaw-btn-color-default:not(:disabled):not(.copaw-btn-disabled),
+html.dark-mode .copaw-btn.copaw-btn-variant-outlined.copaw-btn-color-default:not(:disabled):not(.copaw-btn-disabled),
+html.dark-mode .copaw-btn.copaw-btn-variant-dashed.copaw-btn-color-default:not(:disabled):not(.copaw-btn-disabled) {
+  background: #1f1f1f !important;
+  background-color: #1f1f1f !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+html.dark-mode button.copaw-btn.copaw-btn-variant-outlined.copaw-btn-color-default:not(:disabled):not(.copaw-btn-disabled) span,
+html.dark-mode .copaw-btn.copaw-btn-variant-outlined.copaw-btn-color-default:not(:disabled):not(.copaw-btn-disabled) span {
+  color: inherit !important;
+}
+
+html.dark-mode .copaw-modal-footer .copaw-btn.copaw-btn-color-default.copaw-btn-variant-outlined:not(:disabled):not(.copaw-btn-disabled),
+html.dark-mode .copaw-modal-footer .copaw-btn.copaw-btn-color-default.copaw-btn-variant-dashed:not(:disabled):not(.copaw-btn-disabled),
+html.dark-mode .copaw-drawer-footer .copaw-btn.copaw-btn-color-default.copaw-btn-variant-outlined:not(:disabled):not(.copaw-btn-disabled),
+html.dark-mode .copaw-drawer-footer .copaw-btn.copaw-btn-color-default.copaw-btn-variant-dashed:not(:disabled):not(.copaw-btn-disabled),
+html.dark-mode .copaw-popconfirm .copaw-btn.copaw-btn-color-default.copaw-btn-variant-outlined:not(:disabled):not(.copaw-btn-disabled) {
+  background: #1f1f1f !important;
+  background-color: #1f1f1f !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+/* Tips: Alert */
+html.dark-mode .copaw-alert,
+html.dark-mode .ant-alert {
+  background: #2a2a2a !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+html.dark-mode .copaw-alert-message,
+html.dark-mode .ant-alert-message,
+html.dark-mode .copaw-alert-description,
+html.dark-mode .ant-alert-description {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Message / notification toasts */
+html.dark-mode .copaw-message-notice-content,
+html.dark-mode .ant-message-notice-content {
+  background: #2a2a2a !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+html.dark-mode .copaw-notification-notice,
+html.dark-mode .ant-notification-notice {
+  background: #2a2a2a !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+html.dark-mode .copaw-notification-notice-message,
+html.dark-mode .ant-notification-notice-message,
+html.dark-mode .copaw-notification-notice-description,
+html.dark-mode .ant-notification-notice-description {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Popover / dropdown panels that still pick light surface */
+html.dark-mode .copaw-popover-inner,
+html.dark-mode .ant-popover-inner {
+  background: #1f1f1f !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+html.dark-mode .copaw-popover-inner-title,
+html.dark-mode .ant-popover-inner-title {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+html.dark-mode .copaw-popconfirm-message,
+html.dark-mode .ant-popconfirm-message {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Dropdown overlay menu（如 Header 账号菜单）：Portal + copaw-dropdown-menu-light */
+html.dark-mode .copaw-dropdown[class*="css-var"],
+html.dark-mode .ant-dropdown[class*="css-var"] {
+  --copaw-color-bg-elevated: #1f1f1f !important;
+}
+
+html.dark-mode .copaw-dropdown .copaw-dropdown-menu,
+html.dark-mode .copaw-dropdown-menu.copaw-dropdown-menu-root,
+html.dark-mode .copaw-dropdown-menu.copaw-dropdown-menu-light,
+html.dark-mode .ant-dropdown .ant-dropdown-menu,
+html.dark-mode .ant-dropdown-menu.ant-dropdown-menu-root,
+html.dark-mode .ant-dropdown-menu.ant-dropdown-menu-light {
+  background: #1f1f1f !important;
+  background-color: #1f1f1f !important;
+  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.45) !important;
+}
+
+html.dark-mode .copaw-dropdown-menu-item,
+html.dark-mode .ant-dropdown-menu-item {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+html.dark-mode .copaw-dropdown-menu-item:hover,
+html.dark-mode .copaw-dropdown-menu-item-active,
+html.dark-mode .copaw-dropdown-menu-submenu-title:hover,
+html.dark-mode .ant-dropdown-menu-item:hover,
+html.dark-mode .ant-dropdown-menu-item-active,
+html.dark-mode .ant-dropdown-menu-submenu-title:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+html.dark-mode .copaw-dropdown-menu-title-content,
+html.dark-mode .ant-dropdown-menu-title-content {
+  color: inherit !important;
+}
+
+html.dark-mode .copaw-dropdown-menu-item-icon,
+html.dark-mode .copaw-dropdown-menu-item .anticon,
+html.dark-mode .ant-dropdown-menu-item-icon,
+html.dark-mode .ant-dropdown-menu-item .anticon {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+html.dark-mode .copaw-dropdown-menu-item-divider,
+html.dark-mode .ant-dropdown-menu-item-divider {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/*
+ * Switch 未选中：antd 用 colorTextQuaternary 作轨道背景，深色算法里约 25% 白；
+ * hover 才升到 colorTextTertiary（~45%），故默认发灰、悬停才「正常」。
+ * 将默认对齐到 tertiary，hover 再略提亮以保留反馈。
+ */
+html.dark-mode .copaw-switch:not(.copaw-switch-checked):not(.copaw-switch-disabled):not(
+    .copaw-switch-loading
+  ),
+html.dark-mode .ant-switch:not(.ant-switch-checked):not(.ant-switch-disabled):not(
+    .ant-switch-loading
+  ) {
+  background: rgba(231, 231, 237, 0.45) !important;
+}
+
+html.dark-mode .copaw-switch:not(.copaw-switch-checked):not(.copaw-switch-disabled):not(
+    .copaw-switch-loading
+  ):hover,
+html.dark-mode .ant-switch:not(.ant-switch-checked):not(.ant-switch-disabled):not(
+    .ant-switch-loading
+  ):hover {
+  background: rgba(231, 231, 237, 0.55) !important;
+}
+
+/* XMarkdown preview (inherits wrong bg when parent is dark) */
+html.dark-mode .copaw-modal-body .x-markdown,
+html.dark-mode .copaw-drawer-body .x-markdown,
+html.dark-mode .copaw-card-body .x-markdown {
+  background: #1f1f1f !important;
+  color: rgba(255, 255, 255, 0.85) !important;
 }

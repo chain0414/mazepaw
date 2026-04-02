@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json as _json
 import logging
+import re
 from typing import Any, Literal
 
 from agentscope.message import Msg
@@ -19,6 +20,22 @@ from agentscope.message import Msg
 from ..security.tool_guard.models import TOOL_GUARD_DENIED_MARK
 
 logger = logging.getLogger(__name__)
+
+
+def _git_push_shell_hint(tool_name: str, tool_input: dict) -> str:
+    """Extra user-facing hint when a guarded shell call is a ``git push``."""
+    if tool_name != "execute_shell_command":
+        return ""
+    cmd = (tool_input.get("command") or "").strip()
+    if not re.search(r"\bgit\s+push\b", cmd, re.IGNORECASE):
+        return ""
+    return (
+        "\n\n---\n"
+        "**Git push / Git 推送**：这是会改写远端分支的操作；"
+        "若被工具安全策略拦截，请在控制台完成 **审批** 后再执行。\n"
+        "**Git push** changes remote refs. If tool guard blocked it, "
+        "approve it in the console first."
+    )
 
 
 class ToolGuardMixin:
@@ -213,6 +230,7 @@ class ToolGuardMixin:
             f"{findings_text}\n\n"
             f"This tool is blocked and cannot be approved.\n"
             f"该工具已被禁止，无法批准执行。"
+            f"{_git_push_shell_hint(tool_name, tool_call.get('input') or {})}"
         )
 
         tool_res_msg = Msg(
@@ -264,7 +282,11 @@ class ToolGuardMixin:
             channel=channel,
             tool_name=tool_name,
             result=guard_result,
-            extra={"tool_call": tool_call},
+            extra={
+                "tool_call": tool_call,
+                "agent_id": str(self._request_context.get("agent_id") or ""),
+                "workspace_dir": str(self._workspace_dir or ""),
+            },
         )
 
         self._tool_guard_pending_info = {
@@ -284,6 +306,7 @@ class ToolGuardMixin:
             f"Type `/approve` to approve, "
             f"or send any message to deny.\n"
             f"输入 `/approve` 批准执行，或发送任意消息拒绝。"
+            f"{_git_push_shell_hint(tool_name, tool_call.get('input') or {})}"
         )
 
         tool_res_msg = Msg(
@@ -327,6 +350,7 @@ class ToolGuardMixin:
                 ensure_ascii=False,
                 indent=2,
             )
+            approve_extra = _git_push_shell_hint(tool_name, tool_input)
             msg = Msg(
                 self.name,
                 "⏳ Waiting for approval / 等待审批\n\n"
@@ -336,7 +360,8 @@ class ToolGuardMixin:
                 "Type `/approve` to approve, "
                 "or send any message to deny.\n"
                 "输入 `/approve` 批准执行，"
-                "或发送任意消息拒绝。",
+                "或发送任意消息拒绝。"
+                f"{approve_extra}",
                 "assistant",
             )
             await self.print(msg, True)

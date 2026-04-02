@@ -15,6 +15,7 @@ import {
   LoadingOutlined,
   PlusOutlined,
 } from "@ant-design/icons";
+import { useTheme } from "../../../../contexts/ThemeContext";
 import type {
   ProviderInfo,
   LocalModelResponse,
@@ -48,6 +49,7 @@ export function ModelManageModal({
   onClose,
   onSaved,
 }: ModelManageModalProps) {
+  const { isDark } = useTheme();
   const { t } = useTranslation();
   const [adding, setAdding] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -500,16 +502,16 @@ export function ModelManageModal({
             style={{
               padding: "12px 16px",
               marginBottom: 8,
-              background: "#f6f8fa",
+              background: isDark ? "#2a2a2a" : "#f6f8fa",
               borderRadius: 8,
-              border: "1px solid #e8e8e8",
+              border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "#e8e8e8"}`,
               display: "flex",
               alignItems: "center",
               gap: 10,
             }}
           >
             <LoadingOutlined spin style={{ fontSize: 16, color: "#615CED" }} />
-            <span style={{ color: "#333", fontSize: 13, flex: 1 }}>
+            <span style={{ color: isDark ? "rgba(255,255,255,0.85)" : "#333", fontSize: 13, flex: 1 }}>
               {task.status === "pending"
                 ? t("models.localDownloadPending")
                 : t("models.localDownloading", { repo: task.name })}
@@ -629,16 +631,16 @@ export function ModelManageModal({
             style={{
               padding: "12px 16px",
               marginBottom: 8,
-              background: "#f6f8fa",
+              background: isDark ? "#2a2a2a" : "#f6f8fa",
               borderRadius: 8,
-              border: "1px solid #e8e8e8",
+              border: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "#e8e8e8"}`,
               display: "flex",
               alignItems: "center",
               gap: 10,
             }}
           >
             <LoadingOutlined spin style={{ fontSize: 16, color: "#615CED" }} />
-            <span style={{ color: "#333", fontSize: 13, flex: 1 }}>
+            <span style={{ color: isDark ? "rgba(255,255,255,0.85)" : "#333", fontSize: 13, flex: 1 }}>
               {task.status === "pending"
                 ? t("models.downloadPending")
                 : t("models.localDownloading", { repo: task.repo_id })}

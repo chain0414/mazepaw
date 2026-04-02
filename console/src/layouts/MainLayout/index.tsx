@@ -9,6 +9,8 @@ import ChannelsPage from "../../pages/Control/Channels";
 import SessionsPage from "../../pages/Control/Sessions";
 import CronJobsPage from "../../pages/Control/CronJobs";
 import HeartbeatPage from "../../pages/Control/Heartbeat";
+import DailyDigestPage from "../../pages/Control/DailyDigest";
+import ReviewQueuePage from "../../pages/Control/ReviewQueue";
 import AgentConfigPage from "../../pages/Agent/Config";
 import SkillsPage from "../../pages/Agent/Skills";
 import ToolsPage from "../../pages/Agent/Tools";
@@ -20,6 +22,7 @@ import SecurityPage from "../../pages/Settings/Security";
 import TokenUsagePage from "../../pages/Settings/TokenUsage";
 import VoiceTranscriptionPage from "../../pages/Settings/VoiceTranscription";
 import AgentsPage from "../../pages/Settings/Agents";
+import CredentialsPage from "../../pages/Settings/Credentials";
 
 const { Content } = Layout;
 
@@ -29,11 +32,14 @@ const pathToKey: Record<string, string> = {
   "/sessions": "sessions",
   "/cron-jobs": "cron-jobs",
   "/heartbeat": "heartbeat",
+  "/daily-digest": "daily-digest",
+  "/review-queue": "review-queue",
   "/skills": "skills",
   "/tools": "tools",
   "/mcp": "mcp",
   "/workspace": "workspace",
   "/agents": "agents",
+  "/credentials": "credentials",
   "/models": "models",
   "/environments": "environments",
   "/agent-config": "agent-config",
@@ -62,11 +68,14 @@ export default function MainLayout() {
               <Route path="/sessions" element={<SessionsPage />} />
               <Route path="/cron-jobs" element={<CronJobsPage />} />
               <Route path="/heartbeat" element={<HeartbeatPage />} />
+              <Route path="/daily-digest" element={<DailyDigestPage />} />
+              <Route path="/review-queue" element={<ReviewQueuePage />} />
               <Route path="/skills" element={<SkillsPage />} />
               <Route path="/tools" element={<ToolsPage />} />
               <Route path="/mcp" element={<MCPPage />} />
               <Route path="/workspace" element={<WorkspacePage />} />
               <Route path="/agents" element={<AgentsPage />} />
+              <Route path="/credentials" element={<CredentialsPage />} />
               <Route path="/models" element={<ModelsPage />} />
               <Route path="/environments" element={<EnvironmentsPage />} />
               <Route path="/agent-config" element={<AgentConfigPage />} />

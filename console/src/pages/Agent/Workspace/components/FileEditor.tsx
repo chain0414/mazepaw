@@ -5,6 +5,7 @@ import type { MarkdownFile } from "../../../../api/types";
 import { XMarkdown } from "@ant-design/x-markdown";
 import { useTranslation } from "react-i18next";
 import { stripFrontmatter } from "../../../../utils/markdown";
+import { useTheme } from "../../../../contexts/ThemeContext";
 import styles from "../index.module.less";
 
 interface FileEditorProps {
@@ -27,6 +28,7 @@ export const FileEditor: React.FC<FileEditorProps> = ({
   onReset,
 }) => {
   const { t } = useTranslation();
+  const { isDark } = useTheme();
   const [showMarkdown, setShowMarkdown] = useState(true);
 
   const isMarkdownFile = selectedFile?.filename.endsWith(".md") || false;
@@ -118,6 +120,9 @@ export const FileEditor: React.FC<FileEditorProps> = ({
               {showMarkdown && isMarkdownFile ? (
                 <XMarkdown
                   content={markdownContent}
+                  rootClassName={
+                    isDark ? "x-markdown-dark" : "x-markdown-light"
+                  }
                   className={styles.markdownViewer}
                 />
               ) : (

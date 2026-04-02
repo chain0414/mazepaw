@@ -38,11 +38,11 @@ import {
   BarChart3,
   Mic,
   Bot,
-  LogOut,
+  Newspaper,
+  Inbox,
+  KeyRound,
 } from "lucide-react";
 import api from "../api";
-import { clearAuthToken } from "../api/config";
-import { authApi } from "../api/modules/auth";
 import styles from "./index.module.less";
 import { useTheme } from "../contexts/ThemeContext";
 
@@ -63,11 +63,14 @@ const KEY_TO_PATH: Record<string, string> = {
   sessions: "/sessions",
   "cron-jobs": "/cron-jobs",
   heartbeat: "/heartbeat",
+  "daily-digest": "/daily-digest",
+  "review-queue": "/review-queue",
   skills: "/skills",
   tools: "/tools",
   mcp: "/mcp",
   workspace: "/workspace",
   agents: "/agents",
+  credentials: "/credentials",
   models: "/models",
   environments: "/environments",
   "agent-config": "/agent-config",
@@ -208,14 +211,6 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
   const [allVersions, setAllVersions] = useState<string[]>([]);
   const [updateModalOpen, setUpdateModalOpen] = useState(false);
   const [updateMarkdown, setUpdateMarkdown] = useState<string>("");
-  const [authEnabled, setAuthEnabled] = useState(false);
-
-  useEffect(() => {
-    authApi
-      .getStatus()
-      .then((res) => setAuthEnabled(res.enabled))
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (!collapsed) {
@@ -353,6 +348,16 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
           label: t("nav.heartbeat"),
           icon: <Activity size={16} />,
         },
+        {
+          key: "daily-digest",
+          label: t("nav.dailyDigest"),
+          icon: <Newspaper size={16} />,
+        },
+        {
+          key: "review-queue",
+          label: t("nav.reviewQueue"),
+          icon: <Inbox size={16} />,
+        },
       ],
     },
     {
@@ -381,6 +386,11 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
       icon: <Cpu size={16} />,
       children: [
         { key: "agents", label: t("nav.agents"), icon: <Bot size={16} /> },
+        {
+          key: "credentials",
+          label: t("nav.credentials"),
+          icon: <KeyRound size={16} />,
+        },
         { key: "models", label: t("nav.models"), icon: <Box size={16} /> },
         {
           key: "environments",
@@ -467,28 +477,6 @@ export default function Sidebar({ selectedKey }: SidebarProps) {
         items={menuItems}
         theme={isDark ? "dark" : "light"}
       />
-
-      {authEnabled && (
-        <div style={{ padding: "12px 16px", borderTop: "1px solid #f0f0f0" }}>
-          <Button
-            type="text"
-            icon={<LogOut size={16} />}
-            onClick={() => {
-              clearAuthToken();
-              window.location.href = "/login";
-            }}
-            block
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              justifyContent: collapsed ? "center" : "flex-start",
-            }}
-          >
-            {!collapsed && t("login.logout")}
-          </Button>
-        </div>
-      )}
 
       <Modal
         open={updateModalOpen}

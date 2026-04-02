@@ -1,14 +1,9 @@
 import { Layout, Space } from "antd";
 import LanguageSwitcher from "../components/LanguageSwitcher";
-import ThemeToggleButton from "../components/ThemeToggleButton";
 import AgentSelector from "../components/AgentSelector";
+import HeaderAccountMenu from "../components/HeaderAccountMenu";
 import { useTranslation } from "react-i18next";
-import {
-  FileTextOutlined,
-  BookOutlined,
-  QuestionCircleOutlined,
-  GithubOutlined,
-} from "@ant-design/icons";
+import { GithubOutlined } from "@ant-design/icons";
 import { Button, Tooltip } from "@agentscope-ai/design";
 import styles from "./index.module.less";
 
@@ -23,6 +18,8 @@ const keyToLabel: Record<string, string> = {
   sessions: "nav.sessions",
   "cron-jobs": "nav.cronJobs",
   heartbeat: "nav.heartbeat",
+  "daily-digest": "nav.dailyDigest",
+  "review-queue": "nav.reviewQueue",
   skills: "nav.skills",
   tools: "nav.tools",
   mcp: "nav.mcp",
@@ -33,27 +30,16 @@ const keyToLabel: Record<string, string> = {
   security: "nav.security",
   "token-usage": "nav.tokenUsage",
   agents: "nav.agents",
+  credentials: "nav.credentials",
+  "voice-transcription": "nav.voiceTranscription",
 };
-
-// URL helper functions
-const getWebsiteLang = (lang: string): string =>
-  lang.startsWith("zh") ? "zh" : "en";
-
-const getDocsUrl = (lang: string): string =>
-  `https://copaw.agentscope.io/docs/intro?lang=${getWebsiteLang(lang)}`;
-
-const getFaqUrl = (lang: string): string =>
-  `https://copaw.agentscope.io/docs/faq?lang=${getWebsiteLang(lang)}`;
-
-const getReleaseNotesUrl = (lang: string): string =>
-  `https://copaw.agentscope.io/release-notes?lang=${getWebsiteLang(lang)}`;
 
 interface HeaderProps {
   selectedKey: string;
 }
 
 export default function Header({ selectedKey }: HeaderProps) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const handleNavClick = (url: string) => {
     if (url) {
@@ -73,33 +59,6 @@ export default function Header({ selectedKey }: HeaderProps) {
       </span>
       <Space size="middle">
         <AgentSelector />
-        <Tooltip title={t("header.changelog")}>
-          <Button
-            icon={<FileTextOutlined />}
-            type="text"
-            onClick={() => handleNavClick(getReleaseNotesUrl(i18n.language))}
-          >
-            {t("header.changelog")}
-          </Button>
-        </Tooltip>
-        <Tooltip title={t("header.docs")}>
-          <Button
-            icon={<BookOutlined />}
-            type="text"
-            onClick={() => handleNavClick(getDocsUrl(i18n.language))}
-          >
-            {t("header.docs")}
-          </Button>
-        </Tooltip>
-        <Tooltip title={t("header.faq")}>
-          <Button
-            icon={<QuestionCircleOutlined />}
-            type="text"
-            onClick={() => handleNavClick(getFaqUrl(i18n.language))}
-          >
-            {t("header.faq")}
-          </Button>
-        </Tooltip>
         <Tooltip title={t("header.github")}>
           <Button
             icon={<GithubOutlined />}
@@ -110,7 +69,7 @@ export default function Header({ selectedKey }: HeaderProps) {
           </Button>
         </Tooltip>
         <LanguageSwitcher />
-        <ThemeToggleButton />
+        <HeaderAccountMenu />
       </Space>
     </AntHeader>
   );

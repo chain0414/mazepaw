@@ -5,6 +5,7 @@ import { XMarkdown } from "@ant-design/x-markdown";
 import { useTranslation } from "react-i18next";
 import type { CSSProperties } from "react";
 import { stripFrontmatter } from "../../utils/markdown";
+import { useTheme } from "../../contexts/ThemeContext";
 import styles from "./index.module.less";
 
 interface MarkdownCopyProps {
@@ -52,6 +53,7 @@ export function MarkdownCopy({
   onContentChange,
 }: MarkdownCopyProps) {
   const { t } = useTranslation();
+  const { isDark } = useTheme();
   const [isCopying, setIsCopying] = useState(false);
   const [editContent, setEditContent] = useState(content);
   const [localShowMarkdown, setLocalShowMarkdown] = useState(showMarkdown);
@@ -129,16 +131,28 @@ export function MarkdownCopy({
     ...copyButtonProps,
   };
 
+  /**
+   * 必须先展开 markdownViewerProps，再在 style 里合并；否则父级传入的 style 会整段覆盖默认背景，
+   * 深色下仍出现 inline `background-color: rgb(255, 255, 255)`。
+   */
   const defaultMarkdownViewerProps = {
+    ...markdownViewerProps,
     style: {
       padding: 16,
       height: "100%",
       overflow: "auto",
-      backgroundColor: "#fff",
       borderRadius: 6,
       ...markdownViewerProps.style,
+      ...(isDark
+        ? {
+            backgroundColor: "#1f1f1f",
+            color: "rgba(255, 255, 255, 0.85)",
+          }
+        : {
+            backgroundColor:
+              markdownViewerProps.style?.backgroundColor ?? "#fff",
+          }),
     },
-    ...markdownViewerProps,
   };
 
   const defaultTextareaProps = {

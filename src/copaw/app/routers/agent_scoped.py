@@ -58,6 +58,7 @@ def create_agent_scoped_router() -> APIRouter:
     """
     from .agent import router as agent_router
     from .skills import router as skills_router
+    from .insights import router as insights_router
     from .tools import router as tools_router
     from .config import router as config_router
     from .mcp import router as mcp_router
@@ -84,6 +85,7 @@ def create_agent_scoped_router() -> APIRouter:
     router.include_router(cron_router)
     router.include_router(mcp_router)
     router.include_router(skills_router)
+    router.include_router(insights_router)
     router.include_router(tools_router)
     router.include_router(workspace_router)
     router.include_router(console_router)

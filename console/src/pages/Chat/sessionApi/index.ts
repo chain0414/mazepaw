@@ -7,6 +7,10 @@ import {
   IAgentScopeRuntimeWebUIInputData,
 } from "@agentscope-ai/chat";
 import api, { type ChatSpec, type Message } from "../../../api";
+import {
+  isBootstrapPrefixedUserMessage,
+  userMessageVisibleText,
+} from "../userMessageDisplay";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -21,6 +25,7 @@ const ROLE_ASSISTANT = "assistant";
 const TYPE_PLUGIN_CALL_OUTPUT = "plugin_call_output";
 // const CARD_REQUEST = "AgentScopeRuntimeRequestCard";
 const CARD_RESPONSE = "AgentScopeRuntimeResponseCard";
+const CARD_COMPRESSED_SUMMARY = "CompressedSummaryCard";
 
 // ---------------------------------------------------------------------------
 // Window globals
@@ -86,6 +91,31 @@ const extractTextFromContent = (content: unknown): string => {
     .join("\n");
 };
 
+const isCompressedSummaryText = (text: string): boolean => {
+  if (isBootstrapPrefixedUserMessage(text)) return false;
+  const normalized = text.trim();
+  if (!normalized.startsWith("## Goal")) return false;
+  return (
+    normalized.includes("## Progress") &&
+    normalized.includes("## Next Steps") &&
+    normalized.includes("## Critical Context")
+  );
+};
+
+function buildCompressedSummaryCard(msg: Message): IAgentScopeRuntimeWebUIMessage {
+  const text = extractTextFromContent(msg.content);
+  return {
+    id: (msg.id as string) || generateId(),
+    role: "system",
+    cards: [
+      {
+        code: CARD_COMPRESSED_SUMMARY,
+        data: { text },
+      },
+    ],
+  };
+}
+
 /**
  * Convert a backend message to a response output message.
  * Maps system + plugin_call_output → role "tool" and strips metadata.
@@ -101,7 +131,7 @@ const toOutputMessage = (msg: Message): OutputMessage => ({
 
 /** Build a user card (AgentScopeRuntimeRequestCard) from a user message. */
 function buildUserCard(msg: Message): IAgentScopeRuntimeWebUIMessage {
-  const text = extractTextFromContent(msg.content);
+  const text = userMessageVisibleText(extractTextFromContent(msg.content));
   return {
     id: (msg.id as string) || generateId(),
     role: "user",
@@ -173,7 +203,13 @@ const convertMessages = (
 
   while (i < messages.length) {
     if (messages[i].role === ROLE_USER) {
-      result.push(buildUserCard(messages[i++]));
+      const current = messages[i++];
+      const text = extractTextFromContent(current.content);
+      if (result.length === 0 && isCompressedSummaryText(text)) {
+        result.push(buildCompressedSummaryCard(current));
+      } else {
+        result.push(buildUserCard(current));
+      }
     } else {
       const outputMsgs: OutputMessage[] = [];
       while (i < messages.length && messages[i].role !== ROLE_USER) {

@@ -4,24 +4,35 @@
 Provides RESTful API for managing multiple agent instances.
 """
 import asyncio
-import json
 import logging
+import os
+import subprocess
 from pathlib import Path
 from fastapi import APIRouter, Body, HTTPException, Request
 from fastapi import Path as PathParam
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ...config.config import (
     AgentProfileConfig,
     AgentProfileRef,
+    AgentTemplateId,
+    IntegrationRef,
+    OutputPrefsConfig,
+    RepoAssetRef,
     load_agent_config,
     save_agent_config,
     generate_short_agent_id,
 )
 from ...config.utils import load_config, save_config
 from ...agents.memory.agent_md_manager import AgentMdManager
+from ..agents_workspace import (
+    default_system_prompt_files_for_template,
+    initialize_agent_workspace,
+    refresh_developer_repo_md,
+)
 from ..multi_agent_manager import MultiAgentManager
 from ...constant import WORKING_DIR
+from ...config.git_credential_env import merge_git_credential_env_for_agent
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +46,9 @@ class AgentSummary(BaseModel):
     name: str
     description: str
     workspace_dir: str
+    module_id: str = "general"
+    template_id: str = "general"
+    repo_count: int = 0
 
 
 class AgentListResponse(BaseModel):
@@ -50,6 +64,12 @@ class CreateAgentRequest(BaseModel):
     description: str = ""
     workspace_dir: str | None = None
     language: str = "en"
+    module_id: str = "general"
+    template_id: AgentTemplateId = "general"
+    repo_assets: list[RepoAssetRef] = Field(default_factory=list)
+    integrations: list[IntegrationRef] = Field(default_factory=list)
+    output_prefs: OutputPrefsConfig = Field(default_factory=OutputPrefsConfig)
+    git_credential_id: str = ""
 
 
 class MdFileInfo(BaseModel):
@@ -66,6 +86,114 @@ class MdFileContent(BaseModel):
     """Markdown file content."""
 
     content: str
+
+
+class RepoConnectivityEntry(BaseModel):
+    """Optional git remote reachability probe for one bound repo."""
+
+    repo_id: str
+    local_path: str
+    reachable: bool | None = None
+    message: str = ""
+
+
+def _probe_repo_remote(
+    repo: RepoAssetRef,
+    agent_cfg: AgentProfileConfig | None = None,
+) -> tuple[bool | None, str]:
+    """Return (reachable, message). ``None`` means skipped or inconclusive."""
+    p = Path(repo.local_path).expanduser()
+    if not (p / ".git").exists():
+        return False, "not a git repository"
+    url = (repo.remote_url or "").strip()
+    env = os.environ.copy()
+    merge_git_credential_env_for_agent(env, agent_cfg)
+    if not url:
+        try:
+            r = subprocess.run(
+                ["git", "-C", str(p), "remote", "get-url", "origin"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                env=env,
+            )
+            if r.returncode != 0:
+                return None, "no remote_url and no git remote named origin"
+            url = (r.stdout or "").strip()
+        except Exception as exc:  # noqa: BLE001
+            return None, str(exc)[:200]
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(p), "ls-remote", "--heads", url],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            env=env,
+        )
+        if r.returncode == 0:
+            return True, ""
+        err = (r.stderr or r.stdout or "ls-remote failed").strip()
+        return False, err[:500]
+    except subprocess.TimeoutExpired:
+        return False, "timeout after 15s"
+    except Exception as exc:  # noqa: BLE001
+        return False, str(exc)[:500]
+
+
+def _validate_repo_local_paths(repo_assets: list[RepoAssetRef]) -> None:
+    """Ensure each bound ``local_path`` exists on disk and is a Git checkout."""
+    for r in repo_assets:
+        lp = (r.local_path or "").strip()
+        if not lp:
+            raise HTTPException(
+                status_code=400,
+                detail="repo_assets[].local_path must not be empty when repo is listed",
+            )
+        path = Path(lp).expanduser()
+        if not path.is_dir():
+            raise HTTPException(
+                status_code=400,
+                detail=f"local_path does not exist or is not a directory: {lp}",
+            )
+        if not (path / ".git").exists():
+            raise HTTPException(
+                status_code=400,
+                detail=f"local_path is not a Git repository (missing .git): {lp}",
+            )
+
+
+def _validate_git_credential(agent_config: AgentProfileConfig) -> None:
+    """Ensure git_credential_id references a git credential profile."""
+    cid = (agent_config.git_credential_id or "").strip()
+    if not cid:
+        return
+    config = load_config()
+    for p in config.credentials.profiles:
+        if p.id == cid:
+            if p.type != "git":
+                raise HTTPException(
+                    status_code=400,
+                    detail="Credential profile must have type git",
+                )
+            return
+    raise HTTPException(status_code=400, detail=f"Unknown credential id: {cid}")
+
+
+def _apply_template_defaults(agent_config: AgentProfileConfig) -> AgentProfileConfig:
+    """Normalize template-derived fields before saving."""
+    if agent_config.template_id == "developer":
+        agent_config.module_id = "codeops"
+        if not agent_config.system_prompt_files:
+            agent_config.system_prompt_files = default_system_prompt_files_for_template(
+                "developer",
+            )
+    elif agent_config.template_id == "oss_researcher":
+        agent_config.module_id = "general"
+        if not agent_config.system_prompt_files:
+            agent_config.system_prompt_files = default_system_prompt_files_for_template(
+                "oss_researcher",
+            )
+    return agent_config
 
 
 def _get_multi_agent_manager(request: Request) -> MultiAgentManager:
@@ -99,6 +227,9 @@ async def list_agents() -> AgentListResponse:
                     name=agent_config.name,
                     description=agent_config.description,
                     workspace_dir=agent_ref.workspace_dir,
+                    module_id=agent_config.module_id,
+                    template_id=agent_config.template_id,
+                    repo_count=len(agent_config.repo_assets),
                 ),
             )
         except Exception:  # noqa: E722
@@ -109,6 +240,9 @@ async def list_agents() -> AgentListResponse:
                     name=agent_id.title(),
                     description="",
                     workspace_dir=agent_ref.workspace_dir,
+                    module_id="general",
+                    template_id="general",
+                    repo_count=0,
                 ),
             )
 
@@ -182,14 +316,29 @@ async def create_agent(
         description=request.description,
         workspace_dir=str(workspace_dir),
         language=request.language,
+        module_id=request.module_id,
+        template_id=request.template_id,
+        repo_assets=request.repo_assets,
+        integrations=request.integrations,
+        output_prefs=request.output_prefs,
+        git_credential_id=request.git_credential_id or "",
+        system_prompt_files=default_system_prompt_files_for_template(
+            request.template_id,
+        ),
         channels=ChannelConfig(),
         mcp=MCPConfig(),
         heartbeat=HeartbeatConfig(),
         tools=ToolsConfig(),
     )
+    agent_config = _apply_template_defaults(agent_config)
+    _validate_git_credential(agent_config)
+    if request.repo_assets:
+        _validate_repo_local_paths(request.repo_assets)
 
     # Initialize workspace with default files
-    _initialize_agent_workspace(workspace_dir, agent_config)
+    initialize_agent_workspace(workspace_dir, agent_config)
+    if agent_config.template_id == "developer":
+        refresh_developer_repo_md(workspace_dir, agent_config)
 
     # Save agent configuration to workspace/agent.json
     agent_ref = AgentProfileRef(
@@ -231,9 +380,18 @@ async def update_agent(
 
     # Ensure ID doesn't change
     agent_config.id = agentId
+    agent_config = _apply_template_defaults(agent_config)
+    _validate_git_credential(agent_config)
+    if agent_config.repo_assets:
+        _validate_repo_local_paths(agent_config.repo_assets)
 
     # Save agent configuration
     save_agent_config(agentId, agent_config)
+    if agent_config.template_id == "developer":
+        refresh_developer_repo_md(
+            Path(agent_config.workspace_dir).expanduser(),
+            agent_config,
+        )
 
     # Trigger hot reload if agent is running (async, non-blocking)
     # IMPORTANT: Get manager before creating background task to avoid
@@ -287,6 +445,36 @@ async def delete_agent(
     # Users can manually delete it if needed
 
     return {"success": True, "agent_id": agentId}
+
+
+@router.get(
+    "/{agentId}/repo-connectivity",
+    response_model=list[RepoConnectivityEntry],
+    summary="Probe remote reachability for bound repos",
+    description=(
+        "Runs ``git ls-remote`` per bound repository (optional; may be slow). "
+        "Uses ``remote_url`` when set, otherwise ``origin`` from the checkout."
+    ),
+)
+async def repo_connectivity(agentId: str = PathParam(...)) -> list[RepoConnectivityEntry]:
+    """Best-effort remote connectivity check for developer agent repos."""
+    try:
+        agent_config = load_agent_config(agentId)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+    out: list[RepoConnectivityEntry] = []
+    for repo in agent_config.repo_assets:
+        ok, msg = _probe_repo_remote(repo, agent_config)
+        out.append(
+            RepoConnectivityEntry(
+                repo_id=repo.id,
+                local_path=repo.local_path,
+                reachable=ok,
+                message=msg,
+            ),
+        )
+    return out
 
 
 @router.get(
@@ -409,118 +597,3 @@ async def list_agent_memory(
         return files
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
-
-
-def _initialize_agent_workspace(  # pylint: disable=too-many-branches
-    workspace_dir: Path,
-    agent_config: AgentProfileConfig,  # pylint: disable=unused-argument
-) -> None:
-    """Initialize agent workspace (similar to copaw init --defaults).
-
-    Args:
-        workspace_dir: Path to agent workspace
-        agent_config: Agent configuration (reserved for future use)
-    """
-    import shutil
-    from ...config import load_config as load_global_config
-
-    # Create essential subdirectories
-    (workspace_dir / "sessions").mkdir(exist_ok=True)
-    (workspace_dir / "memory").mkdir(exist_ok=True)
-    (workspace_dir / "active_skills").mkdir(exist_ok=True)
-    (workspace_dir / "customized_skills").mkdir(exist_ok=True)
-
-    # Get language from global config
-    config = load_global_config()
-    language = config.agents.language or "zh"
-
-    # Copy MD files from agents/md_files/{language}/ to workspace
-    md_files_dir = (
-        Path(__file__).parent.parent.parent / "agents" / "md_files" / language
-    )
-    if md_files_dir.exists():
-        for md_file in md_files_dir.glob("*.md"):
-            target_file = workspace_dir / md_file.name
-            if not target_file.exists():
-                try:
-                    shutil.copy2(md_file, target_file)
-                except Exception as e:
-                    logger.warning(
-                        f"Failed to copy {md_file.name}: {e}",
-                    )
-
-    # Create HEARTBEAT.md if not exists
-    heartbeat_file = workspace_dir / "HEARTBEAT.md"
-    if not heartbeat_file.exists():
-        DEFAULT_HEARTBEAT_MDS = {
-            "zh": """# Heartbeat checklist
-- 扫描收件箱紧急邮件
-- 查看未来 2h 的日历
-- 检查待办是否卡住
-- 若安静超过 8h，轻量 check-in
-""",
-            "en": """# Heartbeat checklist
-- Scan inbox for urgent email
-- Check calendar for next 2h
-- Check tasks for blockers
-- Light check-in if quiet for 8h
-""",
-            "ru": """# Heartbeat checklist
-- Проверить входящие на срочные письма
-- Просмотреть календарь на ближайшие 2 часа
-- Проверить задачи на наличие блокировок
-- Лёгкая проверка при отсутствии активности более 8 часов
-""",
-        }
-        heartbeat_content = DEFAULT_HEARTBEAT_MDS.get(
-            language,
-            DEFAULT_HEARTBEAT_MDS["en"],
-        )
-        with open(heartbeat_file, "w", encoding="utf-8") as f:
-            f.write(heartbeat_content.strip())
-
-    # Copy builtin skills to agent's active_skills directory
-    builtin_skills_dir = (
-        Path(__file__).parent.parent.parent / "agents" / "skills"
-    )
-    if builtin_skills_dir.exists():
-        for skill_dir in builtin_skills_dir.iterdir():
-            if skill_dir.is_dir() and (skill_dir / "SKILL.md").exists():
-                target_skill_dir = (
-                    workspace_dir / "active_skills" / skill_dir.name
-                )
-                if not target_skill_dir.exists():
-                    try:
-                        shutil.copytree(skill_dir, target_skill_dir)
-                    except Exception as e:
-                        logger.warning(
-                            f"Failed to copy skill {skill_dir.name}: {e}",
-                        )
-
-    # Create empty jobs.json for cron jobs
-    jobs_file = workspace_dir / "jobs.json"
-    if not jobs_file.exists():
-        with open(jobs_file, "w", encoding="utf-8") as f:
-            json.dump(
-                {"version": 1, "jobs": []},
-                f,
-                ensure_ascii=False,
-                indent=2,
-            )
-
-    # Create empty chats.json for chat history
-    chats_file = workspace_dir / "chats.json"
-    if not chats_file.exists():
-        with open(chats_file, "w", encoding="utf-8") as f:
-            json.dump(
-                {"version": 1, "chats": []},
-                f,
-                ensure_ascii=False,
-                indent=2,
-            )
-
-    # Create empty token_usage.json
-    token_usage_file = workspace_dir / "token_usage.json"
-    if not token_usage_file.exists():
-        with open(token_usage_file, "w", encoding="utf-8") as f:
-            f.write("[]")

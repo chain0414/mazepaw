@@ -30,10 +30,12 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from ..constant import SECRET_DIR
+from .feishu_oauth import is_feishu_auth_configured
 
 logger = logging.getLogger(__name__)
 
 AUTH_FILE = SECRET_DIR / "auth.json"
+CONSOLE_PROFILES_FILE = SECRET_DIR / "console_profiles.json"
 
 # Token validity: 7 days
 TOKEN_EXPIRY_SECONDS = 7 * 24 * 3600
@@ -44,6 +46,8 @@ _PUBLIC_PATHS: frozenset[str] = frozenset(
         "/api/auth/login",
         "/api/auth/status",
         "/api/auth/register",
+        "/api/auth/feishu",
+        "/api/auth/callback/feishu",
         "/api/version",
     },
 )
@@ -188,6 +192,56 @@ def _save_auth_data(data: dict) -> None:
     _chmod_best_effort(AUTH_FILE, 0o600)
 
 
+def _load_console_profiles() -> dict:
+    if not CONSOLE_PROFILES_FILE.is_file():
+        return {}
+    try:
+        with open(CONSOLE_PROFILES_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except (json.JSONDecodeError, OSError) as exc:
+        logger.error(
+            "Failed to load console profiles %s: %s",
+            CONSOLE_PROFILES_FILE,
+            exc,
+        )
+        return {}
+
+
+def upsert_console_profile(
+    username: str,
+    display_name: str,
+    avatar_url: str,
+) -> None:
+    """Cache display name and avatar URL for the web console header."""
+    uname = (username or "").strip()
+    if not uname:
+        return
+    data = _load_console_profiles()
+    data[uname] = {
+        "display_name": (display_name or "").strip(),
+        "avatar_url": (avatar_url or "").strip(),
+    }
+    _prepare_secret_parent(CONSOLE_PROFILES_FILE)
+    with open(CONSOLE_PROFILES_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    _chmod_best_effort(CONSOLE_PROFILES_FILE, 0o600)
+
+
+def get_console_profile(username: str) -> dict[str, str]:
+    """Return cached ``display_name`` and ``avatar_url`` for *username*."""
+    uname = (username or "").strip()
+    if not uname:
+        return {}
+    blob = _load_console_profiles().get(uname)
+    if not isinstance(blob, dict):
+        return {}
+    return {
+        "display_name": str(blob.get("display_name") or ""),
+        "avatar_url": str(blob.get("avatar_url") or ""),
+    }
+
+
 def is_auth_enabled() -> bool:
     """Check whether authentication is enabled via environment variable.
 
@@ -204,6 +258,11 @@ def has_registered_users() -> bool:
     """Return ``True`` if a user has been registered."""
     data = _load_auth_data()
     return bool(data.get("user"))
+
+
+def auth_enforcement_ready() -> bool:
+    """True when middleware should protect APIs (password user or Feishu SSO)."""
+    return has_registered_users() or is_feishu_auth_configured()
 
 
 # ---------------------------------------------------------------------------
@@ -303,7 +362,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
     @staticmethod
     def _should_skip_auth(request: Request) -> bool:
         """Return ``True`` when the request does not require auth."""
-        if not is_auth_enabled() or not has_registered_users():
+        if not is_auth_enabled() or not auth_enforcement_ready():
             return True
 
         path = request.url.path
